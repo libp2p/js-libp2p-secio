@@ -1,0 +1,49 @@
+{
+  "name": "libp2p-secio",
+  "version": "0.1.0",
+  "description": "Secio implementation in JavaScript",
+  "main": "lib/index.js",
+  "jsnext:main": "src/index.js",
+  "scripts": {
+    "lint": "aegir-lint",
+    "build": "aegir-build",
+    "test": "aegir-test",
+    "test:node": "aegir-test --env node",
+    "test:browser": "aegir-test --env browser",
+    "release": "aegir-release",
+    "release-minor": "aegir-release --type minor",
+    "release-major": "aegir-release --type major",
+    "coverage": "aegir-coverage",
+    "coverage-publish": "aegir-coverage publish"
+  },
+  "keywords": [
+    "IPFS",
+    "libp2p",
+    "crypto",
+    "rsa"
+  ],
+  "author": "Friedel Ziegelmayer <dignifiedqurie@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "aegir": "^3.0.4",
+    "chai": "^3.5.0",
+    "pre-commit": "^1.1.3"
+  },
+  "pre-commit": [
+    "lint",
+    "test"
+  ],
+  "engines": {
+    "node": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ipfs/js-libp2p-secio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ipfs/js-libp2p-secio/issues"
+  },
+  "homepage": "https://github.com/ipfs/js-libp2p-secio"
+}
