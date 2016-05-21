@@ -15,7 +15,7 @@ log.error = debug('libp2p:secio:handshake:error')
 const nonceSize = 16
 
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../secio.proto')))
-const support = require('./support')
+const support = require('../support')
 
 module.exports = function propose (session) {
   log('1. propose - start')

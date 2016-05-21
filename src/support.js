@@ -1,5 +1,7 @@
 'use strict'
 
+const forge = require('node-forge')
+
 exports.exchanges = [
   'P-256',
   'P-384',
@@ -41,4 +43,43 @@ exports.theBest = (order, p1, p2) => {
   }
 
   throw new Error('No algorithms in common!')
+}
+
+exports.makeMacAndCipher = (target) => {
+  target.mac = makeMac(target.hashT, target.keys.macKey)
+  target.cipher = makeCipher(target.cipherT, target.keys.iv, target.keys.cipherKey)
+}
+
+const hashMap = {
+  SHA1: 'sha1',
+  SHA256: 'sha256',
+  // workaround for https://github.com/digitalbazaar/forge/issues/401
+  SHA512: forge.md.sha512.create()
+}
+
+function makeMac (hashType, key) {
+  const hash = hashMap[hashType]
+
+  if (!hash) {
+    throw new Error(`unsupported hash type: ${hashType}`)
+  }
+
+  const mac = forge.hmac.create()
+  mac.start(hash, key)
+  return mac
+}
+
+function makeCipher (cipherType, iv, key) {
+  if (cipherType === 'AES-128' || cipherType === 'AES-256') {
+    // aes in counter (CTR) mode because that is what
+    // is used in go (cipher.NewCTR)
+    const cipher = forge.cipher.createCipher('AES-CTR', key)
+    cipher.start({iv})
+    return cipher
+  }
+
+  // TODO: Blowfish is not supported in node-forge, figure out if
+  // it's needed and if so find a library for it.
+
+  throw new Error(`unrecognized cipher type: ${cipherType}`)
 }

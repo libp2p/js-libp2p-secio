@@ -5,6 +5,8 @@ const debug = require('debug')
 const log = debug('libp2p:secio:handshake')
 log.error = debug('libp2p:secio:handshake:error')
 
+const support = require('../support')
+
 module.exports = function exchange (session) {
   log('2. exchange - start')
 
@@ -69,7 +71,8 @@ module.exports = function exchange (session) {
 
   log('2.3. mac + cipher')
 
-  // TODO: generate mac and cipher for local and remote
+  support.makeMacAndCipher(session.local)
+  support.makeMacAndCipher(session.remote)
 
   log('2. exchange - finish')
 }
