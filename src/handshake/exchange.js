@@ -2,8 +2,13 @@
 
 const crypto = require('libp2p-crypto')
 const debug = require('debug')
+const fs = require('fs')
+const path = require('path')
+
 const log = debug('libp2p:secio:handshake')
 log.error = debug('libp2p:secio:handshake:error')
+
+const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../secio.proto')))
 
 const support = require('../support')
 
@@ -28,7 +33,6 @@ module.exports = function exchange (session) {
 
   // TODO: write exchangeOut
   // TODO: read exchangeIn
-  const exchangeIn // = ...read
 
   log('2.1. verify')
 

@@ -4,7 +4,7 @@ const debug = require('debug')
 const log = debug('libp2p:secio:handshake')
 log.error = debug('libp2p:secio:handshake:error')
 
-function finish () {
+module.exports = function finish () {
   log('3. finish - start')
 
   // TODO: wrap insecure stream with the new secure stream

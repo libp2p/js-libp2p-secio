@@ -1,15 +1,9 @@
 'use strict'
 
-const crypto = require('libp2p-crypto')
 const debug = require('debug')
-const protobuf = require('protocol-buffers')
-const path = require('path')
-const fs = require('fs')
 
 const log = debug('libp2p:secio:handshake')
 log.error = debug('libp2p:secio:handshake:error')
-
-const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../secio.proto')))
 
 const propose = require('./propose')
 const exchange = require('./exchange')
@@ -20,7 +14,6 @@ const finish = require('./finish')
 // timeout in flight. Typical handshakes take ~3RTTs, so it should be completed within
 // seconds across a typical planet in the solar system.
 const handshakeTimeout = 30 * 1000
-
 
 // Performs initial communication over insecure channel to share
 // keys, IDs, and initiate communication, assigning all necessary params.

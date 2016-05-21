@@ -7,6 +7,7 @@ const path = require('path')
 const fs = require('fs')
 const PeerId = require('peer-id')
 const mh = require('multihashing')
+const crypto = require('libp2p-crypto')
 
 const log = debug('libp2p:secio:handshake')
 log.error = debug('libp2p:secio:handshake:error')
