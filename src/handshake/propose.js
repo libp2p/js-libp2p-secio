@@ -1,48 +1,23 @@
 'use strict'
 
 const forge = require('node-forge')
-const crypto = require('libp2p-crypto')
 const debug = require('debug')
 const protobuf = require('protocol-buffers')
 const path = require('path')
 const fs = require('fs')
 const PeerId = require('peer-id')
+const mh = require('multihashing')
 
 const log = debug('libp2p:secio:handshake')
 log.error = debug('libp2p:secio:handshake:error')
 
-const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../secio.proto')))
-const support = require('./support')
-
-
-// HandshakeTimeout governs how long the handshake will be allowed to take place for.
-// Making this number large means there could be many bogus connections waiting to
-// timeout in flight. Typical handshakes take ~3RTTs, so it should be completed within
-// seconds across a typical planet in the solar system.
-const HandshakeTimeout = 30 * 1000
-
 // nonceSize is the size of our nonces (in bytes)
 const nonceSize = 16
 
-// Performs initial communication over insecure channel to share
-// keys, IDs, and initiate communication, assigning all necessary params.
-function run () {
+const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../secio.proto')))
+const support = require('./support')
 
-  // step 1. Propose
-  // -- propose cipher suite + send pubkeys + nonce
-  propose()
-
-  // step 2. Exchange
-  // -- exchange (signed) ephemeral keys. verify signatures.
-
-  exchange()
-
-  // step 3. Finish
-  // -- send expected message to verify encryption works (send local nonce)
-  finish()
-}
-
-function propose (session) {
+module.exports = function propose (session) {
   log('1. propose - start')
 
   const nonceOut = forge.random.getBytesSync(nonceSize)
@@ -81,9 +56,9 @@ function propose (session) {
 
 	// we use the same params for both directions (must choose same curve)
 	// WARNING: if they dont SelectBest the same way, this won't work...
-	session.remote.curveT = session.local.curveT
-	session.remote.cipherT = session.local.cipherT
-	session.remote.hashT = session.local.hashT
+  session.remote.curveT = session.local.curveT
+  session.remote.cipherT = session.local.cipherT
+  session.remote.hashT = session.local.hashT
 
   log('1. propose - finish')
 }
@@ -123,14 +98,4 @@ function selectBest (local, remote) {
     cipherT: support.theBest(order, local.ciphers, remote.ciphers),
     hashT: support.theBest(order, local.hashes, remote.hashes)
   }
-}
-
-function exchange () {
-  log('2. exchnage - start')
-  log('2. exchange - finish')
-}
-
-function finish () {
-  log('3. finish - start')
-  log('3. finish - finish')
 }
