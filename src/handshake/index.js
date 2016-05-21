@@ -17,7 +17,7 @@ const handshakeTimeout = 30 * 1000
 
 // Performs initial communication over insecure channel to share
 // keys, IDs, and initiate communication, assigning all necessary params.
-function run (session) {
+module.exports = function handshake (session) {
   // step 1. Propose
   // -- propose cipher suite + send pubkeys + nonce
   propose(session)
