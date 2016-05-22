@@ -1,8 +1,11 @@
 'use strict'
 
+const duplexify = require('duplexify')
+const lpstream = require('length-prefixed-stream')
+
 const handshake = require('./handshake')
 
-module.exports = class SecureSession {
+exports.SecureSession = class SecureSession {
   constructor (local, key, insecure) {
     this.localKey = key
     this.localPeer = local
@@ -10,6 +13,12 @@ module.exports = class SecureSession {
     this.local = {}
     this.remote = {}
     this.insecure = insecure
+    const e = lpstream.encode()
+    const d = lpstream.decode()
+    this.insecureLp = duplexify(e, d)
+
+    e.pipe(this.insecure)
+    this.insecure.pipe(d)
 
     if (!this.localPeer) {
       throw new Error('no local id provided')

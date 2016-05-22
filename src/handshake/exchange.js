@@ -4,6 +4,7 @@ const crypto = require('libp2p-crypto')
 const debug = require('debug')
 const fs = require('fs')
 const path = require('path')
+const protobuf = require('protocol-buffers')
 
 const log = debug('libp2p:secio:handshake')
 log.error = debug('libp2p:secio:handshake:error')
