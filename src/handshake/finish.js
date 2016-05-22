@@ -5,16 +5,15 @@ const debug = require('debug')
 const log = debug('libp2p:secio:handshake')
 log.error = debug('libp2p:secio:handshake:error')
 
-const ETMWriter = require('../etm/writer')
-const ETMReader = require('../etm/reader')
+const etm = require('../etm')
 
 // step 3. Finish
 // -- send expected message to verify encryption works (send local nonce)
 module.exports = function finish (session, cb) {
   log('3. finish - start')
 
-  const w = new ETMWriter(session.insecure, session.local.cipher, session.local.mac)
-  const r = new ETMReader(session.insecure, session.remote.cipher, session.remote.mac)
+  const w = etm.writer(session.insecure, session.local.cipher, session.local.mac)
+  const r = etm.reader(session.insecure, session.remote.cipher, session.remote.mac)
   session.secure = duplexify(w, r)
 
   session.secure.write(session.proposal.in.rand)
