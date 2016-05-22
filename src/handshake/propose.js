@@ -98,6 +98,7 @@ function selection (session, nonceOut, proposeIn) {
   }
 
   let selected = selectBest(local, remote)
+  session.proposal.order = selected.order
 
   session.local.curveT = selected.curveT
   session.local.cipherT = selected.cipherT
@@ -122,7 +123,8 @@ function selectBest (local, remote) {
   return {
     curveT: support.theBest(order, local.exchanges, remote.exchanges),
     cipherT: support.theBest(order, local.ciphers, remote.ciphers),
-    hashT: support.theBest(order, local.hashes, remote.hashes)
+    hashT: support.theBest(order, local.hashes, remote.hashes),
+    order
   }
 }
 
