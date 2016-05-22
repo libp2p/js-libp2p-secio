@@ -3,8 +3,8 @@
 const debug = require('debug')
 const series = require('run-series')
 
-const log = debug('libp2p:secio:handshake')
-log.error = debug('libp2p:secio:handshake:error')
+const log = debug('libp2p:secio')
+log.error = debug('libp2p:secio:error')
 
 const propose = require('./propose')
 const exchange = require('./exchange')

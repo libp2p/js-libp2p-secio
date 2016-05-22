@@ -10,8 +10,7 @@ exports.exchanges = [
 
 exports.ciphers = [
   'AES-256',
-  'AES-128',
-  'Blowfish'
+  'AES-128'
 ]
 
 exports.hashes = [
@@ -57,6 +56,10 @@ const hashMap = {
   SHA512: forge.md.sha512.create()
 }
 
+const toForgeBuffer = exports.toForgeBuffer = (buf) => (
+  forge.util.createBuffer(buf.toString('binary'))
+)
+
 function makeMac (hashType, key) {
   const hash = hashMap[hashType]
 
@@ -65,7 +68,7 @@ function makeMac (hashType, key) {
   }
 
   const mac = forge.hmac.create()
-  mac.start(hash, key)
+  mac.start(hash, toForgeBuffer(key))
   return mac
 }
 
@@ -73,8 +76,8 @@ function makeCipher (cipherType, iv, key) {
   if (cipherType === 'AES-128' || cipherType === 'AES-256') {
     // aes in counter (CTR) mode because that is what
     // is used in go (cipher.NewCTR)
-    const cipher = forge.cipher.createCipher('AES-CTR', key)
-    cipher.start({iv})
+    const cipher = forge.cipher.createCipher('AES-CTR', toForgeBuffer(key))
+    cipher.start({iv: toForgeBuffer(iv)})
     return cipher
   }
 

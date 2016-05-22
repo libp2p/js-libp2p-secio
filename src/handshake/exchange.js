@@ -6,8 +6,8 @@ const fs = require('fs')
 const path = require('path')
 const protobuf = require('protocol-buffers')
 
-const log = debug('libp2p:secio:handshake')
-log.error = debug('libp2p:secio:handshake:error')
+const log = debug('libp2p:secio:2-exchange')
+log.error = debug('libp2p:secio:2-exchange:error')
 
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../secio.proto')))
 
@@ -16,28 +16,32 @@ const support = require('../support')
 // step 2. Exchange
 // -- exchange (signed) ephemeral keys. verify signatures.
 module.exports = function exchange (session, cb) {
-  log('2. exchange - start')
+  log('start')
 
-  let eResult
+  let genSharedKey
+  let exchangeOut
+
   try {
-    eResult = crypto.generateEphemeralKeyPair(session.local.curveT)
+    const eResult = crypto.generateEphemeralKeyPair(session.local.curveT)
+    session.local.ephemeralPubKey = eResult.key
+    genSharedKey = eResult.genSharedKey
+    exchangeOut = makeExchange(session)
+    log('exout', exchangeOut.toString('hex'))
   } catch (err) {
+    log.error(err)
     return cb(err)
   }
-
-  session.local.ephemeralPubKey = eResult.key
-  const genSharedKey = eResult.genSharedKey
-  const exchangeOut = makeExchange(session)
 
   session.insecureLp.write(exchangeOut)
   session.insecureLp.once('data', (chunk) => {
     const exchangeIn = pbm.Exchange.decode(chunk)
-
+    log('exIn', exchangeIn)
     try {
       verify(session, exchangeIn)
       keys(session, exchangeIn, genSharedKey)
       macAndCipher(session)
     } catch (err) {
+      log.error(err)
       return cb(err)
     }
 
@@ -47,23 +51,25 @@ module.exports = function exchange (session, cb) {
 }
 
 function makeExchange (session) {
+  log('make exchange')
   // Gather corpus to sign.
   const selectionOut = Buffer.concat([
     session.proposal.out,
     session.proposal.in,
     session.local.ephemeralPubKey
   ])
-  return pbm.Exchange({
-    epubkey: session.local.ephemeralPubKey,
-    signature: session.localKey.sign(selectionOut)
-  })
+  const epubkey = session.local.ephemeralPubKey
+  const signature = session.localKey.sign(selectionOut)
+
+  log('exOut', epubkey, signature)
+
+  return pbm.Exchange.encode({epubkey, signature})
 }
 
 function verify (session, exchangeIn) {
   log('2.1. verify')
 
   session.remote.ephemeralPubKey = exchangeIn.epubkey
-
   const selectionIn = Buffer.concat([
     session.proposal.in,
     session.proposal.out,

@@ -14,6 +14,7 @@ exports.SecureSession = class SecureSession {
     this.remote = {}
     this.proposal = {}
     this.insecure = insecure
+    this.secure = null
     const e = lpstream.encode()
     const d = lpstream.decode()
     this.insecureLp = duplexify(e, d)
@@ -39,9 +40,16 @@ exports.SecureSession = class SecureSession {
     }
   }
 
+  secureStream (cb) {
+    this.handshake((err) => {
+      if (err) return cb(err)
+
+      cb(null, this.secure)
+    })
+  }
+
   handshake (cb) {
     // TODO: figure out how to best handle the handshake timeout
-    // TODO: better locking
     if (this._handshakeLock) {
       return cb(new Error('handshake already in progress'))
     }

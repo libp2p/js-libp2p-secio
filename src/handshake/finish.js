@@ -2,8 +2,8 @@
 
 const duplexify = require('duplexify')
 const debug = require('debug')
-const log = debug('libp2p:secio:handshake')
-log.error = debug('libp2p:secio:handshake:error')
+const log = debug('libp2p:secio')
+log.error = debug('libp2p:secio:error')
 
 const etm = require('../etm')
 
@@ -16,7 +16,7 @@ module.exports = function finish (session, cb) {
   const r = etm.reader(session.insecure, session.remote.cipher, session.remote.mac)
   session.secure = duplexify(w, r)
 
-  session.secure.write(session.proposal.in.rand)
+  session.secure.write(session.proposal.randIn)
 
   // read our nonce back
   session.secure.once('data', (nonceOut2) => {
