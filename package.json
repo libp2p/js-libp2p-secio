@@ -32,7 +32,8 @@
     "multihashing": "^0.2.1",
     "node-forge": "^0.6.39",
     "peer-id": "^0.6.6",
-    "protocol-buffers": "^3.1.6"
+    "protocol-buffers": "^3.1.6",
+    "run-series": "^1.1.4"
   },
   "devDependencies": {
     "aegir": "^3.0.4",

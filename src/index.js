@@ -12,6 +12,7 @@ exports.SecureSession = class SecureSession {
     this.sharedSecret = null
     this.local = {}
     this.remote = {}
+    this.proposal = {}
     this.insecure = insecure
     const e = lpstream.encode()
     const d = lpstream.decode()
@@ -38,21 +39,31 @@ exports.SecureSession = class SecureSession {
     }
   }
 
-  handshake () {
+  handshake (cb) {
     // TODO: figure out how to best handle the handshake timeout
     // TODO: better locking
-    // TODO: async and callbacks? :(
-    if (this._handshakeLock) return
-    this._handshakeLock = true
-
-    const unlock = () => {
-      this._handshakeLock = false
+    if (this._handshakeLock) {
+      return cb(new Error('handshake already in progress'))
     }
 
-    if (this._handshakeDone) return unlock()
+    this._handshakeLock = true
 
-    handshake(this)
-    this._handshakeDone = true
-    unlock()
+    const finish = (err) => {
+      this._handshakeLock = false
+      cb(err)
+    }
+
+    if (this._handshakeDone) {
+      return finish()
+    }
+
+    handshake(this, (err) => {
+      if (err) {
+        return finish(err)
+      }
+
+      this._handshakeDone = true
+      finish()
+    })
   }
 }

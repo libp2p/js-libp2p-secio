@@ -13,35 +13,60 @@ const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../secio.proto')))
 
 const support = require('../support')
 
-module.exports = function exchange (session) {
+// step 2. Exchange
+// -- exchange (signed) ephemeral keys. verify signatures.
+module.exports = function exchange (session, cb) {
   log('2. exchange - start')
 
-  const eResult = crypto.generateEphemeralKeyPair(session.local.curveT)
+  let eResult
+  try {
+    eResult = crypto.generateEphemeralKeyPair(session.local.curveT)
+  } catch (err) {
+    return cb(err)
+  }
+
   session.local.ephemeralPubKey = eResult.key
   const genSharedKey = eResult.genSharedKey
+  const exchangeOut = makeExchange(session)
 
+  session.insecureLp.write(exchangeOut)
+  session.insecureLp.once('data', (chunk) => {
+    const exchangeIn = pbm.Exchange.decode(chunk)
+
+    try {
+      verify(session, exchangeIn)
+      keys(session, exchangeIn, genSharedKey)
+      macAndCipher(session)
+    } catch (err) {
+      return cb(err)
+    }
+
+    log('2. exchange - finish')
+    cb()
+  })
+}
+
+function makeExchange (session) {
   // Gather corpus to sign.
   const selectionOut = Buffer.concat([
-    proposeOutBytes,
-    proposeInBytes,
+    session.proposal.out,
+    session.proposal.in,
     session.local.ephemeralPubKey
   ])
-
-  const exchangeOut = pbm.Exchange({
+  return pbm.Exchange({
     epubkey: session.local.ephemeralPubKey,
     signature: session.localKey.sign(selectionOut)
   })
+}
 
-  // TODO: write exchangeOut
-  // TODO: read exchangeIn
-
+function verify (session, exchangeIn) {
   log('2.1. verify')
 
   session.remote.ephemeralPubKey = exchangeIn.epubkey
 
   const selectionIn = Buffer.concat([
-    proposeInBytes,
-    proposeOutBytes,
+    session.proposal.in,
+    session.proposal.out,
     session.remote.ephemeralPubKey
   ])
 
@@ -52,7 +77,9 @@ module.exports = function exchange (session) {
   }
 
   log('2.1. verify - signature verified')
+}
 
+function keys (session, exchangeIn, genSharedKey) {
   log('2.2. keys')
 
   session.sharedSecret = genSharedKey(exchangeIn.epubkey)
@@ -60,10 +87,10 @@ module.exports = function exchange (session) {
   const keys = crypto.keyStretcher(session.local.cipherT, session.local.hashT, session.sharedSecret)
 
   // use random nonces to decide order.
-  if (order > 0) {
+  if (session.proposal.order > 0) {
     session.local.keys = keys.k1
     session.remote.keys = keys.k2
-  } else if (order < 0) {
+  } else if (session.proposal.order < 0) {
     // swap
     session.local.keys = keys.k2
     session.remote.keys = keys.k1
@@ -73,11 +100,11 @@ module.exports = function exchange (session) {
   }
 
   log('2.2. keys - shared: %s\n\tlocal: %s\n\tremote: %s', session.sharedSecret, session.local.keys, session.remote.keys)
+}
 
+function macAndCipher (session) {
   log('2.3. mac + cipher')
 
   support.makeMacAndCipher(session.local)
   support.makeMacAndCipher(session.remote)
-
-  log('2. exchange - finish')
 }

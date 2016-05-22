@@ -18,50 +18,36 @@ const nonceSize = 16
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../secio.proto')))
 const support = require('../support')
 
-module.exports = function propose (session) {
+// step 1. Propose
+// -- propose cipher suite + send pubkeys + nonce
+module.exports = function propose (session, cb) {
   log('1. propose - start')
 
   const nonceOut = forge.random.getBytesSync(nonceSize)
   const proposeOut = makeProposal(session, nonceOut)
-  // TODO: write proposal to the insecure transport
-  // TODO: read from the insecure transport
-  const proposeIn = readProposal()
+  session.proposal.out = proposeOut
 
-  log('1.1 identify')
+  session.insecureLp.write(proposeOut)
+  session.insecureLp.once('data', (chunk) => {
+    const proposeIn = readProposal(chunk)
+    session.proposal.in = proposeIn
 
-  session.remote.permanentPubKey = crypto.unmarshalPublicKey(proposeIn.pubKey)
-  session.remotePeer = PeerId.createFromPubKey(session.remote.permanentPubKey)
+    try {
+      identify(session, proposeIn)
+    } catch (err) {
+      return cb(err)
+    }
 
-  log('1.1 identify - %s - identified remote peer as %s', session.localPeer.toB58String(), session.remotePeer.toB58String())
+    try {
+      selection(session, nonceOut, proposeIn)
+    } catch (err) {
+      return cb(err)
+    }
 
-  log('1.2 selection')
+    log('1. propose - finish')
 
-  const local = {
-    pubKeyBytes: session.local.permanentPubKey.bytes,
-    exchanges: support.exchanges,
-    hashes: support.hashes,
-    ciphers: support.ciphers,
-    nonce: nonceOut
-  }
-  const remote = {
-    pubKeyBytes: proposeIn.pubKey,
-    exchanges: proposeIn.exchanges.split(','),
-    hashes: proposeIn.hashes.split(','),
-    ciphers: proposeIn.ciphers.split(','),
-    nonce: proposeIn.rand
-  }
-  const selected = selectBest(local, remote)
-  session.local.curveT = selected.curveT
-  session.local.cipherT = selected.cipherT
-  session.local.hashT = selected.hashT
-
-	// we use the same params for both directions (must choose same curve)
-	// WARNING: if they dont SelectBest the same way, this won't work...
-  session.remote.curveT = session.local.curveT
-  session.remote.cipherT = session.local.cipherT
-  session.remote.hashT = session.local.hashT
-
-  log('1. propose - finish')
+    cb()
+  })
 }
 
 // Generate and send Hello packet.
@@ -83,9 +69,48 @@ function readProposal (bytes) {
   return pbm.Proposal.decode(bytes)
 }
 
-function selectBest (local, remote) {
-  const digest = (buf) => mh.digest(buf, 'sha2-256', buf.length)
+function identify (session, proposeIn) {
+  log('1.1 identify')
 
+  session.remote.permanentPubKey = crypto.unmarshalPublicKey(proposeIn.pubKey)
+  session.remotePeer = PeerId.createFromPubKey(session.remote.permanentPubKey)
+
+  log('1.1 identify - %s - identified remote peer as %s', session.localPeer.toB58String(), session.remotePeer.toB58String())
+}
+
+function selection (session, nonceOut, proposeIn) {
+  log('1.2 selection')
+
+  const local = {
+    pubKeyBytes: session.local.permanentPubKey.bytes,
+    exchanges: support.exchanges,
+    hashes: support.hashes,
+    ciphers: support.ciphers,
+    nonce: nonceOut
+  }
+
+  const remote = {
+    pubKeyBytes: proposeIn.pubKey,
+    exchanges: proposeIn.exchanges.split(','),
+    hashes: proposeIn.hashes.split(','),
+    ciphers: proposeIn.ciphers.split(','),
+    nonce: proposeIn.rand
+  }
+
+  let selected = selectBest(local, remote)
+
+  session.local.curveT = selected.curveT
+  session.local.cipherT = selected.cipherT
+  session.local.hashT = selected.hashT
+
+	// we use the same params for both directions (must choose same curve)
+	// WARNING: if they dont SelectBest the same way, this won't work...
+  session.remote.curveT = session.local.curveT
+  session.remote.cipherT = session.local.cipherT
+  session.remote.hashT = session.local.hashT
+}
+
+function selectBest (local, remote) {
   const oh1 = digest(Buffer.concat(remote.pubKeyBytes, local.nonce))
   const oh2 = digest(Buffer.concat(local.pubKeyBytes, remote.nonce))
   const order = Buffer.compare(oh1, oh2)
@@ -99,4 +124,8 @@ function selectBest (local, remote) {
     cipherT: support.theBest(order, local.ciphers, remote.ciphers),
     hashT: support.theBest(order, local.hashes, remote.hashes)
   }
+}
+
+function digest (buf) {
+  return mh.digest(buf, 'sha2-256', buf.length)
 }
