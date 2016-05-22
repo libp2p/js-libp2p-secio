@@ -26,6 +26,7 @@ module.exports = function propose (session, cb) {
   const nonceOut = forge.random.getBytesSync(nonceSize)
   const proposeOut = makeProposal(session, nonceOut)
   session.proposal.out = proposeOut
+  session.proposal.nonceOut = nonceOut
 
   session.insecureLp.write(proposeOut)
   session.insecureLp.once('data', (chunk) => {
