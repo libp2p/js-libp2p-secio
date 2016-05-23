@@ -29,8 +29,11 @@ module.exports = function propose (session, cb) {
   session.proposal.out = proposeOut
   session.proposal.nonceOut = nonceOut
 
+  log('1. propse - writing proposal')
   session.insecureLp.write(proposeOut)
   session.insecureLp.once('data', (chunk) => {
+    log('1. propse - reading proposal')
+
     let proposeIn
 
     try {

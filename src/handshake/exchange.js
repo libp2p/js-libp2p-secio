@@ -98,8 +98,6 @@ function keys (session, exchangeIn, genSharedKey) {
 		// we should've bailed before this. but if not, bail here.
     throw new Error('you are trying to talk to yourself')
   }
-
-  log('2.2. keys - shared: %s\n\tlocal: %s\n\tremote: %s', session.sharedSecret, session.local.keys, session.remote.keys)
 }
 
 function macAndCipher (session) {

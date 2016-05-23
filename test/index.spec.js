@@ -78,18 +78,13 @@ describe('libp2p-secio', () => {
       createSession(pair.other, (err, remote) => {
         if (err) throw err
 
-        local.session.secureStream((err, localSecure) => {
-          if (err) throw err
+        const localSecure = local.session.secureStream()
+        localSecure.write('hello world')
 
-          localSecure.write('hello world')
-        })
-
-        remote.session.secureStream((err, remoteSecure) => {
-          if (err) throw err
-          remoteSecure.once('data', (chunk) => {
-            expect(chunk.toString()).to.be.eql('hello world')
-            done()
-          })
+        const remoteSecure = remote.session.secureStream()
+        remoteSecure.once('data', (chunk) => {
+          expect(chunk.toString()).to.be.eql('hello world')
+          done()
         })
       })
     })
