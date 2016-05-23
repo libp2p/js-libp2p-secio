@@ -6,8 +6,8 @@ const fs = require('fs')
 const path = require('path')
 const protobuf = require('protocol-buffers')
 
-const log = debug('libp2p:secio:handshake')
-log.error = debug('libp2p:secio:handshake:error')
+const log = debug('libp2p:secio')
+log.error = debug('libp2p:secio:error')
 
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../secio.proto')))
 
@@ -18,16 +18,17 @@ const support = require('../support')
 module.exports = function exchange (session, cb) {
   log('2. exchange - start')
 
-  let eResult
+  let genSharedKey
+  let exchangeOut
+
   try {
-    eResult = crypto.generateEphemeralKeyPair(session.local.curveT)
+    const eResult = crypto.generateEphemeralKeyPair(session.local.curveT)
+    session.local.ephemeralPubKey = eResult.key
+    genSharedKey = eResult.genSharedKey
+    exchangeOut = makeExchange(session)
   } catch (err) {
     return cb(err)
   }
-
-  session.local.ephemeralPubKey = eResult.key
-  const genSharedKey = eResult.genSharedKey
-  const exchangeOut = makeExchange(session)
 
   session.insecureLp.write(exchangeOut)
   session.insecureLp.once('data', (chunk) => {
@@ -53,17 +54,16 @@ function makeExchange (session) {
     session.proposal.in,
     session.local.ephemeralPubKey
   ])
-  return pbm.Exchange({
-    epubkey: session.local.ephemeralPubKey,
-    signature: session.localKey.sign(selectionOut)
-  })
+  const epubkey = session.local.ephemeralPubKey
+  const signature = session.localKey.sign(selectionOut)
+
+  return pbm.Exchange.encode({epubkey, signature})
 }
 
 function verify (session, exchangeIn) {
   log('2.1. verify')
 
   session.remote.ephemeralPubKey = exchangeIn.epubkey
-
   const selectionIn = Buffer.concat([
     session.proposal.in,
     session.proposal.out,

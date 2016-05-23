@@ -9,8 +9,8 @@ const PeerId = require('peer-id')
 const mh = require('multihashing')
 const crypto = require('libp2p-crypto')
 
-const log = debug('libp2p:secio:handshake')
-log.error = debug('libp2p:secio:handshake:error')
+const log = debug('libp2p:secio')
+log.error = debug('libp2p:secio:error')
 
 // nonceSize is the size of our nonces (in bytes)
 const nonceSize = 16
@@ -23,17 +23,20 @@ const support = require('../support')
 module.exports = function propose (session, cb) {
   log('1. propose - start')
 
-  const nonceOut = forge.random.getBytesSync(nonceSize)
+  const nonceOut = new Buffer(forge.random.getBytesSync(nonceSize), 'binary')
   const proposeOut = makeProposal(session, nonceOut)
+
   session.proposal.out = proposeOut
   session.proposal.nonceOut = nonceOut
 
   session.insecureLp.write(proposeOut)
   session.insecureLp.once('data', (chunk) => {
-    const proposeIn = readProposal(chunk)
-    session.proposal.in = proposeIn
+    let proposeIn
 
     try {
+      proposeIn = readProposal(chunk)
+      session.proposal.in = chunk
+      session.proposal.randIn = proposeIn.rand
       identify(session, proposeIn)
     } catch (err) {
       return cb(err)
@@ -54,12 +57,12 @@ module.exports = function propose (session, cb) {
 // Generate and send Hello packet.
 // Hello = (rand, PublicKey, Supported)
 function makeProposal (session, nonceOut) {
-  session.local.permanentPubKey = session.localKey.getPublic()
+  session.local.permanentPubKey = session.localKey.public
   const myPubKeyBytes = session.local.permanentPubKey.bytes
 
-  return pbm.Propose({
+  return pbm.Propose.encode({
     rand: nonceOut,
-    pubKey: myPubKeyBytes,
+    pubkey: myPubKeyBytes,
     exchanges: support.exchanges.join(','),
     ciphers: support.ciphers.join(','),
     hashes: support.hashes.join(',')
@@ -67,14 +70,14 @@ function makeProposal (session, nonceOut) {
 }
 
 function readProposal (bytes) {
-  return pbm.Proposal.decode(bytes)
+  return pbm.Propose.decode(bytes)
 }
 
 function identify (session, proposeIn) {
   log('1.1 identify')
 
-  session.remote.permanentPubKey = crypto.unmarshalPublicKey(proposeIn.pubKey)
-  session.remotePeer = PeerId.createFromPubKey(session.remote.permanentPubKey)
+  session.remote.permanentPubKey = crypto.unmarshalPublicKey(proposeIn.pubkey)
+  session.remotePeer = PeerId.createFromPubKey(proposeIn.pubkey.toString('base64'))
 
   log('1.1 identify - %s - identified remote peer as %s', session.localPeer.toB58String(), session.remotePeer.toB58String())
 }
@@ -91,7 +94,7 @@ function selection (session, nonceOut, proposeIn) {
   }
 
   const remote = {
-    pubKeyBytes: proposeIn.pubKey,
+    pubKeyBytes: proposeIn.pubkey,
     exchanges: proposeIn.exchanges.split(','),
     hashes: proposeIn.hashes.split(','),
     ciphers: proposeIn.ciphers.split(','),
@@ -113,8 +116,14 @@ function selection (session, nonceOut, proposeIn) {
 }
 
 function selectBest (local, remote) {
-  const oh1 = digest(Buffer.concat(remote.pubKeyBytes, local.nonce))
-  const oh2 = digest(Buffer.concat(local.pubKeyBytes, remote.nonce))
+  const oh1 = digest(Buffer.concat([
+    remote.pubKeyBytes,
+    local.nonce
+  ]))
+  const oh2 = digest(Buffer.concat([
+    local.pubKeyBytes,
+    remote.nonce
+  ]))
   const order = Buffer.compare(oh1, oh2)
 
   if (order === 0) {
