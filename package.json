@@ -25,6 +25,7 @@
   "author": "Friedel Ziegelmayer <dignifiedqurie@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "async-buffered-reader": "^1.2.1",
     "debug": "^2.2.0",
     "duplexify": "^3.4.3",
     "length-prefixed-stream": "^1.5.0",

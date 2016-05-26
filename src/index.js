@@ -59,11 +59,14 @@ exports.SecureSession = class SecureSession {
       writer.write = originalWrite
 
       this.handshake((err) => {
-        if (err) return dp.emit('error', err)
+        if (err) {
+          dp.emit('error', err)
+        }
 
         // Pipe things together
         writer.pipe(this.secure)
         this.secure.pipe(reader)
+
         dp.uncork()
         dp.resume()
       })
