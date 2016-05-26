@@ -65,6 +65,7 @@ exports.SecureSession = class SecureSession {
         writer.pipe(this.secure)
         this.secure.pipe(reader)
         dp.uncork()
+        dp.resume()
       })
     }
 
@@ -81,6 +82,7 @@ exports.SecureSession = class SecureSession {
     }
 
     dp.cork()
+    dp.pause()
 
     return dp
   }
