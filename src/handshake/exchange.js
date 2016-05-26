@@ -54,14 +54,15 @@ function makeExchange (session) {
     session.proposal.in,
     session.local.ephemeralPubKey
   ])
-  const epubkey = session.local.ephemeralPubKey
-  const signature = session.localKey.sign(selectionOut)
 
+  const epubkey = session.local.ephemeralPubKey
+  const signature = new Buffer(session.localKey.sign(selectionOut), 'binary')
+  log('out', {epubkey, signature})
   return pbm.Exchange.encode({epubkey, signature})
 }
 
 function verify (session, exchangeIn) {
-  log('2.1. verify')
+  log('2.1. verify', exchangeIn)
 
   session.remote.ephemeralPubKey = exchangeIn.epubkey
   const selectionIn = Buffer.concat([
@@ -69,7 +70,6 @@ function verify (session, exchangeIn) {
     session.proposal.out,
     session.remote.ephemeralPubKey
   ])
-
   const sigOk = session.remote.permanentPubKey.verify(selectionIn, exchangeIn.signature)
 
   if (!sigOk) {
