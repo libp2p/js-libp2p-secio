@@ -1,41 +1,44 @@
 'use strict'
 
-const through = require('through2')
-const lpm = require('length-prefixed-stream')
+const through = require('pull-through')
+const pull = require('pull-stream')
+const lp = require('pull-length-prefixed')
 
 const toForgeBuffer = require('./support').toForgeBuffer
 
-exports.writer = function etmWriter (insecure, cipher, mac) {
-  const encode = lpm.encode()
-  const pt = through(function (chunk, enc, cb) {
+const lpOpts = {
+  fixed: true,
+  bytes: 4
+}
+
+exports.createBoxStream = (cipher, mac) => {
+  const pt = through(function (chunk) {
     cipher.update(toForgeBuffer(chunk))
 
     if (cipher.output.length() > 0) {
       const data = new Buffer(cipher.output.getBytes(), 'binary')
-      mac.update(data)
-      const macBuffer = new Buffer(mac.getMac().getBytes(), 'binary')
+      mac.update(data.toString('binary'))
+      const macBuffer = new Buffer(mac.digest().getBytes(), 'binary')
 
-      this.push(Buffer.concat([data, macBuffer]))
+      this.queue(Buffer.concat([data, macBuffer]))
       // reset hmac
       mac.start(null, null)
     }
-
-    cb()
   })
 
-  pt.pipe(encode).pipe(insecure)
-
-  return pt
+  return pull(
+    pt,
+    lp.encode(lpOpts)
+  )
 }
 
-exports.reader = function etmReader (insecure, decipher, mac) {
-  const decode = lpm.decode()
-  const pt = through(function (chunk, enc, cb) {
+exports.createUnboxStream = (decipher, mac) => {
+  const pt = through(function (chunk) {
     const l = chunk.length
     const macSize = mac.getMac().length()
 
     if (l < macSize) {
-      return cb(new Error(`buffer (${l}) shorter than MAC size (${macSize})`))
+      return this.emit('error', new Error(`buffer (${l}) shorter than MAC size (${macSize})`))
     }
 
     const mark = l - macSize
@@ -45,12 +48,13 @@ exports.reader = function etmReader (insecure, decipher, mac) {
     // Clear out any previous data
     mac.start(null, null)
 
-    mac.update(data)
+    mac.update(data.toString('binary'))
     const expected = new Buffer(mac.getMac().getBytes(), 'binary')
+
     // reset hmac
     mac.start(null, null)
     if (!macd.equals(expected)) {
-      return cb(new Error(`MAC Invalid: ${macd.toString('hex')} != ${expected.toString('hex')}`))
+      return this.emit('error', new Error(`MAC Invalid: ${macd.toString('hex')} != ${expected.toString('hex')}`))
     }
 
     // all good, decrypt
@@ -58,13 +62,12 @@ exports.reader = function etmReader (insecure, decipher, mac) {
 
     if (decipher.output.length() > 0) {
       const data = new Buffer(decipher.output.getBytes(), 'binary')
-      this.push(data)
+      this.queue(data)
     }
-
-    cb()
   })
 
-  insecure.pipe(decode).pipe(pt)
-
-  return pt
+  return pull(
+    lp.decode(lpOpts),
+    pt
+  )
 }
