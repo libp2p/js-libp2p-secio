@@ -1,35 +1,56 @@
 'use strict'
 
-const duplexify = require('duplexify')
+const pull = require('pull-stream')
+const handshake = require('pull-handshake')
 const debug = require('debug')
+
 const log = debug('libp2p:secio')
 log.error = debug('libp2p:secio:error')
-const read = require('async-buffered-reader')
 
 const etm = require('../etm')
+const crypto = require('./crypto')
 
 // step 3. Finish
 // -- send expected message to verify encryption works (send local nonce)
-module.exports = function finish (session, cb) {
+module.exports = function finish (state, cb) {
   log('3. finish - start')
 
-  const w = etm.writer(session.insecure, session.local.cipher, session.local.mac)
-  const r = etm.reader(session.insecure, session.remote.cipher, session.remote.mac)
-  session.secure = duplexify(w, r)
-  session.secure.write(session.proposal.randIn)
+  const proto = state.protocols
+  const stream = state.shake.rest()
+  const shake = handshake({timeout: state.timeout})
 
-  // read our nonce back
-  read(session.secure, 16, (nonceOut2) => {
-    const nonceOut = session.proposal.nonceOut
-    if (!nonceOut.equals(nonceOut2)) {
-      const err = new Error(`Failed to read our encrypted nonce: ${nonceOut.toString('hex')} != ${nonceOut2.toString('hex')}`)
+  pull(
+    stream,
+    etm.createUnboxStream(proto.remote.cipher, proto.remote.mac),
+    shake,
+    etm.createBoxStream(proto.local.cipher, proto.local.mac),
+    stream
+  )
+
+  shake.handshake.write(state.proposal.in.rand)
+  shake.handshake.read(state.proposal.in.rand.length, (err, nonceBack) => {
+    const fail = (err) => {
       log.error(err)
-      return cb(err)
+      state.secure.resolve({
+        source: pull.error(err),
+        sink (read) {
+        }
+      })
+      cb(err)
     }
 
-    log('3. finish - finish', nonceOut.toString('hex'), nonceOut2.toString('hex'))
+    if (err) return fail(err)
+
+    try {
+      crypto.verifyNonce(state, nonceBack)
+    } catch (err) {
+      return fail(err)
+    }
+
+    log('3. finish - finish')
 
     // Awesome that's all folks.
+    state.secure.resolve(shake.handshake.rest())
     cb()
   })
 }

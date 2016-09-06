@@ -1,10 +1,6 @@
 'use strict'
 
-const debug = require('debug')
 const series = require('run-series')
-
-const log = debug('libp2p:secio')
-log.error = debug('libp2p:secio:error')
 
 const propose = require('./propose')
 const exchange = require('./exchange')
@@ -12,10 +8,18 @@ const finish = require('./finish')
 
 // Performs initial communication over insecure channel to share
 // keys, IDs, and initiate communication, assigning all necessary params.
-module.exports = function handshake (session, cb) {
+module.exports = function handshake (state) {
   series([
-    (cb) => propose(session, cb),
-    (cb) => exchange(session, cb),
-    (cb) => finish(session, cb)
-  ], cb)
+    (cb) => propose(state, cb),
+    (cb) => exchange(state, cb),
+    (cb) => finish(state, cb)
+  ], (err) => {
+    state.cleanSecrets()
+
+    if (err) {
+      state.shake.abort(err)
+    }
+  })
+
+  return state.stream
 }
