@@ -56,8 +56,6 @@ exports.identify = (state, msg) => {
   state.proposal.in = pbm.Propose.decode(msg)
   const pubkey = state.proposal.in.pubkey
 
-  console.log(state.proposal.in)
-
   state.key.remote = crypto.unmarshalPublicKey(pubkey)
   state.id.remote = PeerId.createFromPubKey(pubkey.toString('base64'))
 
