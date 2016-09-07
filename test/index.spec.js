@@ -12,24 +12,26 @@ const pull = require('pull-stream')
 const Listener = ms.Listener
 const Dialer = ms.Dialer
 
-const SecureSession = require('../src').SecureSession
+const secio = require('../src')
 
 describe('libp2p-secio', () => {
+  it('exports a tag', () => {
+    expect(secio.tag).to.be.eql('/secio/1.0.0')
+  })
+
   it('upgrades a connection', (done) => {
     const p = pair()
 
     const local = createSession(p[0])
     const remote = createSession(p[1])
-    const localSecure = local.session.secure
 
     pull(
       pull.values(['hello world']),
-      localSecure
+      local
     )
 
-    const remoteSecure = remote.session.secure
     pull(
-      remoteSecure,
+      remote,
       pull.collect((err, chunks) => {
         expect(err).to.not.exist
         expect(chunks).to.be.eql([new Buffer('hello world')])
@@ -52,7 +54,7 @@ describe('libp2p-secio', () => {
       ], cb),
       (cb) => {
         listener.addHandler('/banana/1.0.0', (conn) => {
-          local = createSession(conn).session.secure
+          local = createSession(conn)
           pull(
             local,
             pull.collect((err, chunks) => {
@@ -65,7 +67,7 @@ describe('libp2p-secio', () => {
         cb()
       },
       (cb) => dialer.select('/banana/1.0.0', (err, conn) => {
-        remote = createSession(conn).session.secure
+        remote = createSession(conn)
         pull(
           pull.values(['hello world']),
           remote
@@ -81,10 +83,6 @@ describe('libp2p-secio', () => {
 function createSession (insecure) {
   const key = crypto.generateKeyPair('RSA', 2048)
   const id = PeerId.createFromPrivKey(key.bytes)
-  return {
-    id,
-    key,
-    insecure,
-    session: new SecureSession(id, key, insecure)
-  }
+
+  return secio.encrypt(id, key, insecure)
 }
