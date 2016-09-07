@@ -6,8 +6,9 @@ const Connection = require('interface-connection').Connection
 const handshake = require('./handshake')
 const State = require('./state')
 
-exports.SecureSession = class SecureSession {
-  constructor (local, key, insecure) {
+module.exports = {
+  tag: '/secio/1.0.0',
+  encrypt (local, key, insecure) {
     if (!local) {
       throw new Error('no local id provided')
     }
@@ -20,17 +21,14 @@ exports.SecureSession = class SecureSession {
       throw new Error('no insecure stream provided')
     }
 
-    this.state = new State(local, key)
-    this.insecure = insecure
+    const state = new State(local, key)
 
     pull(
-      this.insecure,
-      handshake(this.state),
-      this.insecure
+      insecure,
+      handshake(state),
+      insecure
     )
-  }
 
-  get secure () {
-    return new Connection(this.state.secure, this.insecure)
+    return new Connection(state.secure, insecure)
   }
 }
