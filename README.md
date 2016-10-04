@@ -60,7 +60,7 @@ You can learn more about pull-streams at:
 
 #### Converting `pull-streams` to Node.js Streams
 
-If you are a Node.js streams user, you can convert a pull-stream to a Node.js stream using the module [`pull-stream-to-stream`](https://github.com/dominictarr/pull-stream-to-stream), giving you an instance of a Node.js stream that is linked to the pull-stream. For example:
+If you are a Node.js streams user, you can convert a pull-stream to a Node.js stream using the module [`pull-stream-to-stream`](https://github.com/pull-stream/pull-stream-to-stream), giving you an instance of a Node.js stream that is linked to the pull-stream. For example:
 
 ```js
 const pullToStream = require('pull-stream-to-stream')
@@ -75,7 +75,7 @@ To learn more about this utility, visit https://pull-stream.github.io/#pull-stre
 
 ## Contribute
 
-Feel free to join in. All welcome. Open an [issue](https://github.com/ipfs/js-libp2p-secio/issues)!
+Feel free to join in. All welcome. Open an [issue](https://github.com/libp2p/js-libp2p-secio/issues)!
 
 This repository falls under the IPFS [Code of Conduct](https://github.com/ipfs/community/blob/master/code-of-conduct.md).
 
