@@ -5,6 +5,11 @@ const deferred = require('pull-defer')
 
 class State {
   constructor (id, key, timeout, cb) {
+    if (typeof timeout === 'function') {
+      cb = timeout
+      timeout = undefined
+    }
+
     this.setup()
     this.id.local = id
     this.key.local = key

@@ -1,9 +1,10 @@
 'use strict'
 
-const mh = require('multihashing')
-const forge = require('node-forge')
+const mh = require('multihashing-async')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
+const crypto = require('libp2p-crypto')
+const parallel = require('async/parallel')
 
 exports.exchanges = [
   'P-256',
@@ -47,78 +48,73 @@ exports.theBest = (order, p1, p2) => {
   throw new Error('No algorithms in common!')
 }
 
-exports.makeMacAndCipher = (target) => {
-  target.mac = makeMac(target.hashT, target.keys.macKey)
-  target.cipher = makeCipher(target.cipherT, target.keys.iv, target.keys.cipherKey)
+exports.makeMacAndCipher = (target, callback) => {
+  parallel([
+    (cb) => makeMac(target.hashT, target.keys.macKey, cb),
+    (cb) => makeCipher(target.cipherT, target.keys.iv, target.keys.cipherKey, cb)
+  ], (err, macAndCipher) => {
+    if (err) {
+      return callback(err)
+    }
+
+    target.mac = macAndCipher[0]
+    target.cipher = macAndCipher[1]
+    callback()
+  })
 }
 
-const hashMap = {
-  SHA1: 'sha1',
-  SHA256: 'sha256',
-  // workaround for https://github.com/digitalbazaar/forge/issues/401
-  SHA512: forge.md.sha512.create()
+function makeMac (hash, key, callback) {
+  crypto.hmac.create(hash, key, callback)
 }
 
-const toForgeBuffer = exports.toForgeBuffer = (buf) => (
-  forge.util.createBuffer(buf.toString('binary'))
-)
-
-function makeMac (hashType, key) {
-  const hash = hashMap[hashType]
-
-  if (!hash) {
-    throw new Error(`unsupported hash type: ${hashType}`)
-  }
-
-  const mac = forge.hmac.create()
-  mac.start(hash, toForgeBuffer(key))
-  return mac
-}
-
-function makeCipher (cipherType, iv, key) {
+function makeCipher (cipherType, iv, key, callback) {
   if (cipherType === 'AES-128' || cipherType === 'AES-256') {
-    // aes in counter (CTR) mode because that is what
-    // is used in go (cipher.NewCTR)
-    const cipher = forge.cipher.createCipher('AES-CTR', toForgeBuffer(key))
-    cipher.start({iv: toForgeBuffer(iv)})
-    return cipher
+    return crypto.aes.create(key, iv, callback)
   }
 
-  // TODO: Blowfish is not supported in node-forge, figure out if
-  // it's needed and if so find a library for it.
-
-  throw new Error(`unrecognized cipher type: ${cipherType}`)
+  // TODO: figure out if Blowfish is needed and if so find a library for it.
+  callback(new Error(`unrecognized cipher type: ${cipherType}`))
 }
 
 exports.randomBytes = (nonceSize) => {
-  return new Buffer(forge.random.getBytesSync(nonceSize), 'binary')
+  return Buffer.from(crypto.webcrypto.getRandomValues(new Uint8Array(nonceSize)))
 }
 
-exports.selectBest = (local, remote) => {
-  const oh1 = exports.digest(Buffer.concat([
+exports.selectBest = (local, remote, cb) => {
+  exports.digest(Buffer.concat([
     remote.pubKeyBytes,
     local.nonce
-  ]))
-  const oh2 = exports.digest(Buffer.concat([
-    local.pubKeyBytes,
-    remote.nonce
-  ]))
-  const order = Buffer.compare(oh1, oh2)
+  ]), (err, oh1) => {
+    if (err) {
+      return cb(err)
+    }
 
-  if (order === 0) {
-    throw new Error('you are trying to talk to yourself')
-  }
+    exports.digest(Buffer.concat([
+      local.pubKeyBytes,
+      remote.nonce
+    ]), (err, oh2) => {
+      if (err) {
+        return cb(err)
+      }
 
-  return {
-    curveT: exports.theBest(order, local.exchanges, remote.exchanges),
-    cipherT: exports.theBest(order, local.ciphers, remote.ciphers),
-    hashT: exports.theBest(order, local.hashes, remote.hashes),
-    order
-  }
+      const order = Buffer.compare(oh1, oh2)
+
+      if (order === 0) {
+        cb(new Error('you are trying to talk to yourself'))
+      }
+
+      cb(null, {
+        curveT: exports.theBest(order, local.exchanges, remote.exchanges),
+        cipherT: exports.theBest(order, local.ciphers, remote.ciphers),
+        hashT: exports.theBest(order, local.hashes, remote.hashes),
+        order
+      })
+    })
+  })
 }
 
-exports.digest = (buf) => {
-  return mh.digest(buf, 'sha2-256', buf.length)
+exports.digest = (buf, cb) => {
+  mh.digest(buf, 'sha2-256', buf.length, cb)
 }
 
 exports.write = function write (state, msg, cb) {

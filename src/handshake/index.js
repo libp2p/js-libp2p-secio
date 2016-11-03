@@ -1,6 +1,6 @@
 'use strict'
 
-const series = require('run-series')
+const series = require('async/series')
 
 const propose = require('./propose')
 const exchange = require('./exchange')

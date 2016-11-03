@@ -17,7 +17,11 @@ module.exports = function finish (state, cb) {
 
   const proto = state.protocols
   const stream = state.shake.rest()
-  const shake = handshake({timeout: state.timeout})
+  const shake = handshake({timeout: state.timeout}, (err) => {
+    if (err) {
+      throw err
+    }
+  })
 
   pull(
     stream,

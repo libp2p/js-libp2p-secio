@@ -8,7 +8,7 @@ const State = require('./state')
 
 module.exports = {
   tag: '/secio/1.0.0',
-  encrypt (local, key, insecure) {
+  encrypt (local, key, insecure, callback) {
     if (!local) {
       throw new Error('no local id provided')
     }
@@ -21,7 +21,13 @@ module.exports = {
       throw new Error('no insecure stream provided')
     }
 
-    const state = new State(local, key)
+    if (!callback) {
+      callback = (err) => {
+        throw err
+      }
+    }
+
+    const state = new State(local, key, callback)
 
     pull(
       insecure,

@@ -1,6 +1,7 @@
 'use strict'
 
 const debug = require('debug')
+const waterfall = require('async/waterfall')
 
 const support = require('../support')
 const crypto = require('./crypto')
@@ -15,22 +16,20 @@ module.exports = function propose (state, cb) {
 
   log('1. propose - writing proposal')
   support.write(state, crypto.createProposal(state))
-  support.read(state.shake, (err, msg) => {
+
+  waterfall([
+    (cb) => support.read(state.shake, cb),
+    (msg, cb) => {
+      log('1. propose - reading proposal', msg)
+      crypto.identify(state, msg, cb)
+    },
+    (cb) => crypto.selectProtocols(state, cb)
+  ], (err) => {
     if (err) {
       return cb(err)
     }
 
-    log('1. propose - reading proposal', msg)
-
-    try {
-      crypto.identify(state, msg)
-      crypto.selectProtocols(state)
-    } catch (err) {
-      return cb(err)
-    }
-
     log('1. propose - finish')
-
     cb()
   })
 }
