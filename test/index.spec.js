@@ -61,7 +61,7 @@ describe('libp2p-secio', () => {
         (cb) => dialer.handle(p[1], cb)
       ], cb),
       (cb) => {
-        listener.addHandler('/banana/1.0.0', (conn) => {
+        listener.addHandler('/banana/1.0.0', (protocol, conn) => {
           createSession(conn, (err, local) => {
             if (err) {
               return done(err)
