@@ -31,7 +31,7 @@
     "libp2p-crypto": "^0.7.0",
     "multihashing-async": "^0.2.0",
     "peer-id": "^0.8.0",
-    "protocol-buffers": "^3.1.6",
+    "protocol-buffers": "^3.1.7",
     "pull-defer": "^0.2.2",
     "pull-handshake": "^1.1.4",
     "pull-length-prefixed": "^1.2.0",
