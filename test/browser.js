@@ -33,12 +33,9 @@ describe('secio browser <-> nodejs', () => {
   })
 
   it('encrypt', (done) => {
-    secio.encrypt(pid, {
-      public: pid._pubKey,
-      private: pid._privKey
-    }, conn, (err, _encryptedConn) => {
+    secio.encrypt(pid, pid._privKey, conn, (err, c) => {
       expect(err).to.not.exist
-      encryptedConn = _encryptedConn
+      encryptedConn = c
       done()
     })
   })
