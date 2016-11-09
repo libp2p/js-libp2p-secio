@@ -33,7 +33,7 @@ describe('secio browser <-> nodejs', () => {
   })
 
   it('encrypt', () => {
-    secio.encrypt(pid, pid._privKey, conn)
+    encryptedConn = secio.encrypt(pid, pid._privKey, conn)
   })
 
   it('echo', (done) => {

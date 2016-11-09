@@ -21,12 +21,9 @@ gulp.task('test:browser:before', (done) => {
     const ws = new WS()
     const ma = multiaddr('/ip4/127.0.0.1/tcp/9090/ws')
     listener = ws.createListener((conn) => {
-      secio.encrypt(pid, pid._privKey, conn, (err, conn) => {
-        if (err) {
-          return done(err)
-        }
-        pull(conn, conn)
-      })
+      const encrypted = secio.encrypt(pid, pid._privKey, conn)
+
+      pull(conn, encrypted, conn)
     })
     listener.listen(ma, done)
   })
