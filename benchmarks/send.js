@@ -46,7 +46,7 @@ suite.add('createKey', function (d) {
     pull(
       pull.infinite(),
       pull.take(100),
-      pull.map((val) => Buffer(val.toString())),
+      pull.map((val) => new Buffer(val.toString())),
       local
     )
 

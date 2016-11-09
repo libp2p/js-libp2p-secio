@@ -43,11 +43,12 @@ const secio = require('libp2p-secio')
 
 The current `secio` tag, usable in `multistream`.
 
-### `encrypt(id, key, insecure)`
+### `encrypt(id, key, insecure[, callback])`
 
 - `id: PeerId` - The id of the node.
 - `key: RSAPrivateKey` - The private key of the node.
 - `insecure: PullStream` - The insecure connection.
+- `callback: Function` - Called if an error happens during the initialization.
 
 Returns the `insecure` connection provided, wrapped with secio. This is a pull-stream.
 
