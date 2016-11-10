@@ -5,35 +5,33 @@ const expect = require('chai').expect
 const multiaddr = require('multiaddr')
 const pull = require('pull-stream')
 const pullGoodbye = require('pull-goodbye')
-
-const secio = require('../src')
 const WS = require('libp2p-websockets')
 const PeerId = require('peer-id')
+const parallel = require('async/parallel')
+
 const peerBrowserJSON = require('./peer-browser.json')
+const secio = require('../src')
 
 describe('secio browser <-> nodejs', () => {
   const ma = multiaddr('/ip4/127.0.0.1/tcp/9090/ws')
-  let ws
   let conn
-  let pid
   let encryptedConn
 
   before((done) => {
-    PeerId.createFromJSON(peerBrowserJSON, (err, _pid) => {
-      expect(err).to.not.exist
+    parallel([
+      (cb) => PeerId.createFromJSON(peerBrowserJSON, cb),
+      (cb) => {
+        const ws = new WS()
+        conn = ws.dial(ma, cb)
+      }
+    ], (err, res) => {
+      if (err) {
+        return done(err)
+      }
 
-      pid = _pid
-      ws = new WS()
-      expect(ws).to.exist
-      conn = ws.dial(ma, (err) => {
-        expect(err).to.not.exist
-        done()
-      })
+      encryptedConn = secio.encrypt(res[0], res[0]._privKey, conn)
+      done()
     })
-  })
-
-  it('encrypt', () => {
-    encryptedConn = secio.encrypt(pid, pid._privKey, conn)
   })
 
   it('echo', (done) => {
@@ -46,8 +44,15 @@ describe('secio browser <-> nodejs', () => {
         expect(results).to.be.eql([message])
         done()
       })
-    })
+    }, 'GoodBye')
 
-    pull(s, encryptedConn, s)
+    pull(
+      s,
+      encryptedConn,
+      // Need to convert to a string as goodbye only understands strings
+
+      pull.map((msg) => msg.toString()),
+      s
+    )
   })
 })

@@ -10,6 +10,7 @@ const lpOpts = {
 
 exports.createBoxStream = (cipher, mac) => {
   return pull(
+    ensureBuffer(),
     pull.asyncMap((chunk, cb) => {
       cipher.encrypt(chunk, (err, data) => {
         if (err) {
@@ -31,6 +32,7 @@ exports.createBoxStream = (cipher, mac) => {
 
 exports.createUnboxStream = (decipher, mac) => {
   return pull(
+    ensureBuffer(),
     lp.decode(lpOpts),
     pull.asyncMap((chunk, cb) => {
       const l = chunk.length
@@ -64,4 +66,14 @@ exports.createUnboxStream = (decipher, mac) => {
       })
     })
   )
+}
+
+function ensureBuffer () {
+  return pull.map((c) => {
+    if (typeof c === 'string') {
+      return new Buffer(c, 'utf-8')
+    }
+
+    return c
+  })
 }
