@@ -23,7 +23,10 @@ module.exports = {
 
     if (!callback) {
       callback = (err) => {
-        throw err
+        if (err) {
+          console.error(err)
+          throw err
+        }
       }
     }
 

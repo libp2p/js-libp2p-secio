@@ -102,18 +102,18 @@ describe('libp2p-secio', () => {
   })
 })
 
-function createSession (insecure, cb) {
+function createSession (insecure, callback) {
   crypto.generateKeyPair('RSA', 2048, (err, key) => {
     if (err) {
-      return cb(err)
+      return callback(err)
     }
 
     key.public.hash((err, digest) => {
       if (err) {
-        return cb(err)
+        return callback(err)
       }
 
-      cb(null, secio.encrypt(new PeerId(digest, key), key, insecure))
+      callback(null, secio.encrypt(new PeerId(digest, key), key, insecure))
     })
   })
 }
