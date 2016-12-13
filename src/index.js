@@ -25,12 +25,11 @@ module.exports = {
       callback = (err) => {
         if (err) {
           console.error(err)
-          throw err
         }
       }
     }
 
-    const state = new State(local, key, callback)
+    const state = new State(local, key, 60 * 1000 * 5, callback)
 
     pull(
       insecure,
