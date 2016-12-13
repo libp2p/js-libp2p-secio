@@ -17,6 +17,9 @@ module.exports = function handshake (state) {
     state.cleanSecrets()
 
     if (err) {
+      if (err === true) {
+        err = new Error('Stream ended prematurely')
+      }
       state.shake.abort(err)
     }
   })

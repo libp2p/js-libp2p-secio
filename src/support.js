@@ -100,7 +100,7 @@ exports.selectBest = (local, remote, cb) => {
       const order = Buffer.compare(oh1, oh2)
 
       if (order === 0) {
-        cb(new Error('you are trying to talk to yourself'))
+        return cb(new Error('you are trying to talk to yourself'))
       }
 
       cb(null, {
