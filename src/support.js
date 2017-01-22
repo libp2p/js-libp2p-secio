@@ -76,10 +76,6 @@ function makeCipher (cipherType, iv, key, callback) {
   callback(new Error(`unrecognized cipher type: ${cipherType}`))
 }
 
-exports.randomBytes = (nonceSize) => {
-  return Buffer.from(crypto.webcrypto.getRandomValues(new Uint8Array(nonceSize)))
-}
-
 exports.selectBest = (local, remote, cb) => {
   exports.digest(Buffer.concat([
     remote.pubKeyBytes,
