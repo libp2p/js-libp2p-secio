@@ -18,7 +18,7 @@ const nonceSize = 16
 
 exports.createProposal = (state) => {
   state.proposal.out = {
-    rand: support.randomBytes(nonceSize),
+    rand: crypto.randomBytes(nonceSize),
     pubkey: state.key.local.public.bytes,
     exchanges: support.exchanges.join(','),
     ciphers: support.ciphers.join(','),
