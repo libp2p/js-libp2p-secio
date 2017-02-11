@@ -1,3 +1,13 @@
+<a name="0.6.7"></a>
+## [0.6.7](https://github.com/ipfs/js-libp2p-secio/compare/v0.6.6...v0.6.7) (2017-02-11)
+
+
+### Bug Fixes
+
+* disable webworker tests ([2650370](https://github.com/ipfs/js-libp2p-secio/commit/2650370))
+
+
+
 <a name="0.6.6"></a>
 ## [0.6.6](https://github.com/ipfs/js-libp2p-secio/compare/v0.6.5...v0.6.6) (2017-02-09)
 
