@@ -1,3 +1,8 @@
+<a name="0.6.8"></a>
+## [0.6.8](https://github.com/ipfs/js-libp2p-secio/compare/v0.6.7...v0.6.8) (2017-03-21)
+
+
+
 <a name="0.6.7"></a>
 ## [0.6.7](https://github.com/ipfs/js-libp2p-secio/compare/v0.6.6...v0.6.7) (2017-02-11)
 
