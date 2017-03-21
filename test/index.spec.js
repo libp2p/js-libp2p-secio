@@ -3,7 +3,10 @@
 'use strict'
 
 const pair = require('pull-pair/duplex')
-const expect = require('chai').expect
+const chai = require('chai')
+const dirtyChai = require('dirty-chai')
+const expect = chai.expect
+chai.use(dirtyChai)
 const PeerId = require('peer-id')
 const crypto = require('libp2p-crypto')
 const parallel = require('async/parallel')
@@ -40,7 +43,7 @@ describe('libp2p-secio', () => {
         pull(
           remote,
           pull.collect((err, chunks) => {
-            expect(err).to.not.exist
+            expect(err).to.not.exist()
             expect(chunks).to.be.eql([new Buffer('hello world')])
             done()
           })
@@ -69,7 +72,7 @@ describe('libp2p-secio', () => {
             pull(
               local,
               pull.collect((err, chunks) => {
-                expect(err).to.not.exist
+                expect(err).to.not.exist()
                 expect(chunks).to.be.eql([new Buffer('hello world')])
                 done()
               })

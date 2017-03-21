@@ -1,7 +1,10 @@
 /* eslint-env mocha */
 'use strict'
 
-const expect = require('chai').expect
+const chai = require('chai')
+const dirtyChai = require('dirty-chai')
+const expect = chai.expect
+chai.use(dirtyChai)
 const multiaddr = require('multiaddr')
 const pull = require('pull-stream')
 const pullGoodbye = require('pull-goodbye')
@@ -40,7 +43,7 @@ describe('secio browser <-> nodejs', () => {
     const s = pullGoodbye({
       source: pull.values([message]),
       sink: pull.collect((err, results) => {
-        expect(err).to.not.exist
+        expect(err).to.not.exist()
         expect(results).to.be.eql([message])
         done()
       })
