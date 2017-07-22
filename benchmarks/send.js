@@ -12,14 +12,11 @@ const suite = new Benchmark.Suite('secio')
 const ids = []
 
 suite.add('createKey', function (d) {
-  crypto.generateKeyPair('RSA', 2048, (err, key) => {
-    if (err) {
-      throw err
-    }
+  crypto.keys.generateKeyPair('RSA', 2048, (err, key) => {
+    if (err) { throw err }
     PeerId.createFromPrivKey(key.bytes, (err, id) => {
-      if (err) {
-        throw err
-      }
+      if (err) { throw err }
+
       ids.push(id)
       d.resolve()
     })
@@ -31,13 +28,10 @@ suite.add('createKey', function (d) {
   const p = pair()
 
   createSession(p[0], (err, local) => {
-    if (err) {
-      throw err
-    }
+    if (err) { throw err }
     createSession(p[1], (err, remote) => {
-      if (err) {
-        throw err
-      }
+      if (err) { throw err }
+
       sendMessages(local, remote)
     })
   })
@@ -46,7 +40,7 @@ suite.add('createKey', function (d) {
     pull(
       pull.infinite(),
       pull.take(100),
-      pull.map((val) => new Buffer(val.toString())),
+      pull.map((val) => Buffer.from(val.toString())),
       local
     )
 
@@ -72,14 +66,11 @@ suite.add('createKey', function (d) {
 })
 
 function createSession (insecure, cb) {
-  crypto.generateKeyPair('RSA', 2048, (err, key) => {
-    if (err) {
-      return cb(err)
-    }
+  crypto.keys.generateKeyPair('RSA', 2048, (err, key) => {
+    if (err) { return cb(err) }
+
     PeerId.createFromPrivKey(key.bytes, (err, id) => {
-      if (err) {
-        return cb(err)
-      }
+      if (err) { return cb(err) }
 
       cb(null, secio.encrypt(id, key, insecure))
     })
