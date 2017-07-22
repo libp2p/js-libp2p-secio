@@ -30,7 +30,7 @@ exports.createProposal = (state) => {
 }
 
 exports.createExchange = (state, callback) => {
-  crypto.generateEphemeralKeyPair(state.protocols.local.curveT, (err, res) => {
+  crypto.keys.generateEphemeralKeyPair(state.protocols.local.curveT, (err, res) => {
     if (err) {
       return callback(err)
     }
@@ -67,7 +67,7 @@ exports.identify = (state, msg, callback) => {
   state.proposal.in = pbm.Propose.decode(msg)
   const pubkey = state.proposal.in.pubkey
 
-  state.key.remote = crypto.unmarshalPublicKey(pubkey)
+  state.key.remote = crypto.keys.unmarshalPublicKey(pubkey)
   PeerId.createFromPubKey(pubkey.toString('base64'), (err, remoteId) => {
     if (err) {
       return callback(err)
@@ -156,7 +156,7 @@ exports.generateKeys = (state, callback) => {
     (secret, cb) => {
       state.shared.secret = secret
 
-      crypto.keyStretcher(
+      crypto.keys.keyStretcher(
         state.protocols.local.cipherT,
         state.protocols.local.hashT,
         state.shared.secret,

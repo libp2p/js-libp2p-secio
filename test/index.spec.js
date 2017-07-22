@@ -11,6 +11,7 @@ const PeerId = require('peer-id')
 const crypto = require('libp2p-crypto')
 const parallel = require('async/parallel')
 const series = require('async/series')
+const Buffer = require('safe-buffer').Buffer
 const ms = require('multistream-select')
 const pull = require('pull-stream')
 const Listener = ms.Listener
@@ -20,23 +21,19 @@ const secio = require('../src')
 
 describe('libp2p-secio', () => {
   it('exports a tag', () => {
-    expect(secio.tag).to.be.eql('/secio/1.0.0')
+    expect(secio.tag).to.equal('/secio/1.0.0')
   })
 
   it('upgrades a connection', (done) => {
     const p = pair()
     createSession(p[0], (err, local) => {
-      if (err) {
-        return done(err)
-      }
+      expect(err).to.not.exist()
 
       createSession(p[1], (err, remote) => {
-        if (err) {
-          return done(err)
-        }
+        expect(err).to.not.exist()
 
         pull(
-          pull.values([new Buffer('hello world')]),
+          pull.values([Buffer.from('hello world')]),
           local
         )
 
@@ -44,7 +41,7 @@ describe('libp2p-secio', () => {
           remote,
           pull.collect((err, chunks) => {
             expect(err).to.not.exist()
-            expect(chunks).to.be.eql([new Buffer('hello world')])
+            expect(chunks).to.eql([Buffer.from('hello world')])
             done()
           })
         )
@@ -66,9 +63,7 @@ describe('libp2p-secio', () => {
       (cb) => {
         listener.addHandler('/banana/1.0.0', (protocol, conn) => {
           createSession(conn, (err, local) => {
-            if (err) {
-              return done(err)
-            }
+            expect(err).to.not.exist()
             pull(
               local,
               pull.collect((err, chunks) => {
@@ -82,14 +77,10 @@ describe('libp2p-secio', () => {
         cb()
       },
       (cb) => dialer.select('/banana/1.0.0', (err, conn) => {
-        if (err) {
-          return cb(err)
-        }
+        expect(err).to.not.exist()
 
         createSession(conn, (err, remote) => {
-          if (err) {
-            return cb(err)
-          }
+          expect(err).to.not.exist()
           pull(
             pull.values([new Buffer('hello world')]),
             remote
@@ -97,24 +88,16 @@ describe('libp2p-secio', () => {
           cb()
         })
       })
-    ], (err) => {
-      if (err) {
-        throw err
-      }
-    })
+    ], (err) => expect(err).to.not.exist())
   })
 })
 
 function createSession (insecure, callback) {
-  crypto.generateKeyPair('RSA', 2048, (err, key) => {
-    if (err) {
-      return callback(err)
-    }
+  crypto.keys.generateKeyPair('RSA', 2048, (err, key) => {
+    expect(err).to.not.exist()
 
     key.public.hash((err, digest) => {
-      if (err) {
-        return callback(err)
-      }
+      expect(err).to.not.exist()
 
       callback(null, secio.encrypt(new PeerId(digest, key), key, insecure))
     })
