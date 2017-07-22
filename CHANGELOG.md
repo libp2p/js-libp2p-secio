@@ -1,3 +1,13 @@
+<a name="0.7.0"></a>
+# [0.7.0](https://github.com/ipfs/js-libp2p-secio/compare/v0.6.8...v0.7.0) (2017-07-22)
+
+
+### Features
+
+* next libp2p-crypto ([#90](https://github.com/ipfs/js-libp2p-secio/issues/90)) ([2df6544](https://github.com/ipfs/js-libp2p-secio/commit/2df6544))
+
+
+
 <a name="0.6.8"></a>
 ## [0.6.8](https://github.com/ipfs/js-libp2p-secio/compare/v0.6.7...v0.6.8) (2017-03-21)
 
