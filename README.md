@@ -7,11 +7,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/libp2p/js-libp2p-secio/badge.svg?branch=master)](https://coveralls.io/github/libp2p/js-libp2p-secio?branch=master)
 [![Travis CI](https://travis-ci.org/libp2p/js-libp2p-secio.svg?branch=master)](https://travis-ci.org/libp2p/js-libp2p-secio)
 [![Circle CI](https://circleci.com/gh/libp2p/js-libp2p-secio.svg?style=svg)](https://circleci.com/gh/libp2p/js-libp2p-secio)
-[![Dependency Status](https://david-dm.org/libp2p/js-libp2p-secio.svg?style=flat-square)](https://david-dm.org/libp2p/js-libp2p-secio) [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/feross/standard)
+[![Dependency Status](https://david-dm.org/libp2p/js-libp2p-secio.svg?style=flat-square)](https://david-dm.org/libp2p/js-libp2p-secio)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/feross/standard)
 ![](https://img.shields.io/badge/npm-%3E%3D3.0.0-orange.svg?style=flat-square)
 ![](https://img.shields.io/badge/Node.js-%3E%3D4.0.0-orange.svg?style=flat-square)
 
-[![Sauce Test Status](https://saucelabs.com/browser-matrix/libp2p-js-secio.svg)](https://saucelabs.com/u/libp2p-js-secio)
 
 > Secio implementation in JavaScript
 
