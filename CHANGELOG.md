@@ -1,3 +1,13 @@
+<a name="0.8.0"></a>
+# [0.8.0](https://github.com/ipfs/js-libp2p-secio/compare/v0.7.1...v0.8.0) (2017-09-03)
+
+
+### Features
+
+* p2p addrs situation ([#91](https://github.com/ipfs/js-libp2p-secio/issues/91)) ([bf4fb78](https://github.com/ipfs/js-libp2p-secio/commit/bf4fb78))
+
+
+
 <a name="0.7.1"></a>
 ## [0.7.1](https://github.com/ipfs/js-libp2p-secio/compare/v0.7.0...v0.7.1) (2017-07-22)
 
