@@ -1,6 +1,6 @@
 'use strict'
 
-const protobuf = require('protocol-buffers')
+const protons = require('protons')
 const PeerId = require('peer-id')
 const crypto = require('libp2p-crypto')
 const parallel = require('async/parallel')
@@ -9,7 +9,7 @@ const debug = require('debug')
 const log = debug('libp2p:secio')
 log.error = debug('libp2p:secio:error')
 
-const pbm = protobuf(require('./secio.proto'))
+const pbm = protons(require('./secio.proto'))
 
 const support = require('../support')
 
