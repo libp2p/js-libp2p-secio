@@ -28,7 +28,7 @@
     "async": "^2.5.0",
     "debug": "^3.0.1",
     "interface-connection": "~0.3.2",
-    "libp2p-crypto": "~0.10.0",
+    "libp2p-crypto": "~0.10.3",
     "multihashing-async": "~0.4.6",
     "peer-id": "~0.10.0",
     "protons": "^1.0.0",
