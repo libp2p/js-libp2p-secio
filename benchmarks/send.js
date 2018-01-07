@@ -2,6 +2,7 @@
 
 const Benchmark = require('benchmark')
 const pull = require('pull-stream')
+const Connection = require('interface-connection').Connection
 const parallel = require('async/parallel')
 const pair = require('pull-pair/duplex')
 const PeerId = require('peer-id')
@@ -35,6 +36,12 @@ function sendData (a, b, opts, finish) {
   )
 }
 
+function ifErr (err) {
+  if (err) {
+    throw err
+  }
+}
+
 suite.add('create peers for test', (deferred) => {
   parallel([
     (cb) => PeerId.createFromJSON(require('./peer-a'), cb),
@@ -53,8 +60,8 @@ suite.add('establish an encrypted channel', (deferred) => {
   const peerA = peers[0]
   const peerB = peers[1]
 
-  const aToB = secio.encrypt(peerA, p[0], peerB, (err) => { throw err })
-  const bToA = secio.encrypt(peerB, p[1], peerA, (err) => { throw err })
+  const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, ifErr)
+  const bToA = secio.encrypt(peerB, new Connection(p[1]), peerA, ifErr)
 
   sendData(aToB, bToA, {}, deferred)
 }, { defer: true })
@@ -83,8 +90,8 @@ cases.forEach((el) => {
     const peerA = peers[0]
     const peerB = peers[1]
 
-    const aToB = secio.encrypt(peerA, p[0], peerB, (err) => { throw err })
-    const bToA = secio.encrypt(peerB, p[1], peerA, (err) => { throw err })
+    const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, ifErr)
+    const bToA = secio.encrypt(peerB, new Connection(p[1]), peerA, ifErr)
 
     sendData(aToB, bToA, { times: times, size: size }, deferred)
   }, { defer: true })
