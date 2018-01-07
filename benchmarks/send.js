@@ -2,49 +2,30 @@
 
 const Benchmark = require('benchmark')
 const pull = require('pull-stream')
+const parallel = require('async/parallel')
 const pair = require('pull-pair/duplex')
 const PeerId = require('peer-id')
-const crypto = require('libp2p-crypto')
 
 const secio = require('../src')
 
-function createSession (insecure, cb) {
-  crypto.keys.generateKeyPair('RSA', 2048, (err, key) => {
-    if (err) { return cb(err) }
-
-    PeerId.createFromPrivKey(key.bytes, (err, id) => {
-      if (err) { return cb(err) }
-
-      cb(null, secio.encrypt(id, key, insecure))
-    })
-  })
-}
-
 const suite = new Benchmark.Suite('secio')
-const ids = []
 
-suite.add('createKey', (d) => {
-  crypto.keys.generateKeyPair('RSA', 2048, (err, key) => {
-    if (err) { throw err }
-    PeerId.createFromPrivKey(key.bytes, (err, id) => {
-      if (err) { throw err }
-
-      ids.push(id)
-      d.resolve()
-    })
-  })
-}, { defer: true })
-
-suite.add('send', (deferred) => {
+suite.add('establish an encrypted channel', (deferred) => {
   const p = pair()
 
-  createSession(p[0], (err, local) => {
+  parallel([
+    (cb) => PeerId.createFromJSON(require('./peer-a'), cb),
+    (cb) => PeerId.createFromJSON(require('./peer-b'), cb)
+  ], (err, peers) => {
     if (err) { throw err }
-    createSession(p[1], (err, remote) => {
-      if (err) { throw err }
 
-      sendMessages(local, remote)
-    })
+    const peerA = peers[0]
+    const peerB = peers[1]
+
+    const aToB = secio.encrypt(peerB, peerA.privKey, p[0], (err) => { throw err })
+    const bToA = secio.encrypt(peerA, peerB.privKey, p[1], (err) => { throw err })
+
+    sendMessages(aToB, bToA)
   })
 
   function sendMessages (local, remote) {
