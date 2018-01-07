@@ -141,7 +141,7 @@ describe('secio', () => {
     }
 
     // we are using peerC Id on purpose to fail
-    secio.encrypt(peerA, p[0], peerC, check)
-    secio.encrypt(peerB, p[1], peerA, check)
+    secio.encrypt(peerA, new Connection(p[0]), peerC, check)
+    secio.encrypt(peerB, new Connection(p[1]), peerA, check)
   })
 })
