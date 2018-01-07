@@ -9,15 +9,76 @@ const PeerId = require('peer-id')
 const secio = require('../src')
 
 const suite = new Benchmark.Suite('secio')
+let peers
+
+function sendData (a, b, opts, finish) {
+  opts = Object.assign({ times: 1, size: 100 }, opts)
+
+  pull(
+    pull.infinite(() => Buffer.allocUnsafe(opts.size)),
+    pull.take(opts.times),
+    a
+  )
+
+  let length = 0
+
+  pull(
+    b,
+    pull.drain((data) => {
+      length += data.length
+    }, () => {
+      if (length !== opts.times * opts.size) {
+        throw new Error('Did not receive enough chunks')
+      }
+      finish.resolve()
+    })
+  )
+}
+
+suite.add('create peers for test', (deferred) => {
+  parallel([
+    (cb) => PeerId.createFromJSON(require('./peer-a'), cb),
+    (cb) => PeerId.createFromJSON(require('./peer-b'), cb)
+  ], (err, _peers) => {
+    if (err) { throw err }
+    peers = _peers
+
+    deferred.resolve()
+  })
+}, { defer: true })
 
 suite.add('establish an encrypted channel', (deferred) => {
   const p = pair()
 
-  parallel([
-    (cb) => PeerId.createFromJSON(require('./peer-a'), cb),
-    (cb) => PeerId.createFromJSON(require('./peer-b'), cb)
-  ], (err, peers) => {
-    if (err) { throw err }
+  const peerA = peers[0]
+  const peerB = peers[1]
+
+  const aToB = secio.encrypt(peerB, peerA.privKey, p[0], (err) => { throw err })
+  const bToA = secio.encrypt(peerA, peerB.privKey, p[1], (err) => { throw err })
+
+  sendData(aToB, bToA, {}, deferred)
+}, { defer: true })
+
+const cases = [
+  [10, 262144],
+  [100, 262144],
+  [1000, 262144]
+  // [10000, 262144],
+  // [100000, 262144],
+  // [1000000, 262144]
+]
+cases.forEach((el) => {
+  const times = el[0]
+  const size = el[1]
+
+  suite.add(`send plaintext ${times} x ${size} bytes`, (deferred) => {
+    const p = pair()
+
+    sendData(p[0], p[1], { times: times, size: size }, deferred)
+  }, { defer: true })
+
+  suite.add(`send encrypted ${times} x ${size} bytes`, (deferred) => {
+    const p = pair()
 
     const peerA = peers[0]
     const peerB = peers[1]
@@ -25,28 +86,9 @@ suite.add('establish an encrypted channel', (deferred) => {
     const aToB = secio.encrypt(peerB, peerA.privKey, p[0], (err) => { throw err })
     const bToA = secio.encrypt(peerA, peerB.privKey, p[1], (err) => { throw err })
 
-    sendMessages(aToB, bToA)
-  })
-
-  function sendMessages (local, remote) {
-    pull(
-      pull.infinite(),
-      pull.take(100),
-      pull.map((val) => Buffer.from(val.toString())),
-      local
-    )
-
-    pull(
-      remote,
-      pull.take(100),
-      pull.collect((err, chunks) => {
-        if (err) { throw err }
-        if (chunks.length !== 100) { throw new Error('Did not receive enough chunks') }
-        deferred.resolve()
-      })
-    )
-  }
-}, { defer: true })
+    sendData(aToB, bToA, { times: times, size: size }, deferred)
+  }, { defer: true })
+})
 
 suite.on('cycle', (event) => {
   console.log(String(event.target))
