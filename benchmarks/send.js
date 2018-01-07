@@ -8,10 +8,22 @@ const crypto = require('libp2p-crypto')
 
 const secio = require('../src')
 
+function createSession (insecure, cb) {
+  crypto.keys.generateKeyPair('RSA', 2048, (err, key) => {
+    if (err) { return cb(err) }
+
+    PeerId.createFromPrivKey(key.bytes, (err, id) => {
+      if (err) { return cb(err) }
+
+      cb(null, secio.encrypt(id, key, insecure))
+    })
+  })
+}
+
 const suite = new Benchmark.Suite('secio')
 const ids = []
 
-suite.add('createKey', function (d) {
+suite.add('createKey', (d) => {
   crypto.keys.generateKeyPair('RSA', 2048, (err, key) => {
     if (err) { throw err }
     PeerId.createFromPrivKey(key.bytes, (err, id) => {
@@ -21,10 +33,9 @@ suite.add('createKey', function (d) {
       d.resolve()
     })
   })
-}, {
-  defer: true
-})
-.add('send', function (deferred) {
+}, { defer: true })
+
+suite.add('send', (deferred) => {
   const p = pair()
 
   createSession(p[0], (err, local) => {
@@ -48,31 +59,17 @@ suite.add('createKey', function (d) {
       remote,
       pull.take(100),
       pull.collect((err, chunks) => {
-        if (err) throw err
-        if (chunks.length !== 100) throw new Error('Did not receive enough chunks')
+        if (err) { throw err }
+        if (chunks.length !== 100) { throw new Error('Did not receive enough chunks') }
         deferred.resolve()
       })
     )
   }
-}, {
-  defer: true
-})
-.on('cycle', (event) => {
+}, { defer: true })
+
+suite.on('cycle', (event) => {
   console.log(String(event.target))
 })
+
 // run async
-.run({
-  async: true
-})
-
-function createSession (insecure, cb) {
-  crypto.keys.generateKeyPair('RSA', 2048, (err, key) => {
-    if (err) { return cb(err) }
-
-    PeerId.createFromPrivKey(key.bytes, (err, id) => {
-      if (err) { return cb(err) }
-
-      cb(null, secio.encrypt(id, key, insecure))
-    })
-  })
-}
+suite.run({ async: true })

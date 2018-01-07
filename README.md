@@ -13,7 +13,7 @@
 ![](https://img.shields.io/badge/Node.js-%3E%3D6.0.0-orange.svg?style=flat-square)
 
 
-> Secio implementation in JavaScript
+> SECIO implementation in JavaScript
 
 This repo contains the JavaScript implementation of secio, an encryption protocol used in libp2p. This is based on this [go implementation](https://github.com/libp2p/go-libp2p-secio).
 
@@ -43,7 +43,7 @@ const secio = require('libp2p-secio')
 
 The current `secio` tag, usable in `multistream`.
 
-### `encrypt(id, key, insecure[, callback])`
+### `i.encrypt(id, key, insecure[, callback])`
 
 - `id: PeerId` - The id of the node.
 - `key: RSAPrivateKey` - The private key of the node.

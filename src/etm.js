@@ -71,7 +71,7 @@ exports.createUnboxStream = (decipher, mac) => {
 function ensureBuffer () {
   return pull.map((c) => {
     if (typeof c === 'string') {
-      return new Buffer(c, 'utf-8')
+      return Buffer.from(c, 'utf-8')
     }
 
     return c

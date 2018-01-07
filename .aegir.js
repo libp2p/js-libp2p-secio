@@ -7,7 +7,7 @@ const PeerId = require('peer-id')
 
 const secio = require('./src')
 
-const peerNodeJSON = require('./test/peer-node.json')
+const peerNodeJSON = require('./test/fixtures/peer-node.json')
 const ma = multiaddr('/ip4/127.0.0.1/tcp/9090/ws')
 let listener
 

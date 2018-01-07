@@ -12,10 +12,10 @@ const WS = require('libp2p-websockets')
 const PeerId = require('peer-id')
 const parallel = require('async/parallel')
 
-const peerBrowserJSON = require('./peer-browser.json')
+const peerBrowserJSON = require('./fixtures/peer-browser.json')
 const secio = require('../src')
 
-describe('secio browser <-> nodejs', () => {
+describe('secio between browser <-> nodejs through websockets', () => {
   const ma = multiaddr('/ip4/127.0.0.1/tcp/9090/ws')
   let conn
   let encryptedConn

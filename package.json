@@ -14,7 +14,7 @@
     "release-major": "aegir release --type major -t node browser",
     "coverage": "aegir coverage",
     "coverage-publish": "aegir coverage publish",
-    "bench": "node benchmarks/send.js"
+    "benchmark": "node benchmarks/send.js"
   },
   "keywords": [
     "IPFS",
