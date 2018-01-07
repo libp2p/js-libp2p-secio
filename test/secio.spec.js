@@ -19,53 +19,51 @@ const Dialer = ms.Dialer
 
 const secio = require('../src')
 
-function createSession (insecure, callback) {
-  crypto.keys.generateKeyPair('RSA', 2048, (err, key) => {
-    expect(err).to.not.exist()
+describe('secio', () => {
+  let peerA
+  let peerB
+  let peerC
 
-    key.public.hash((err, digest) => {
+  before((done) => {
+    parallel([
+      (cb) => PeerId.createFromJSON(require('./fixtures/peer-a'), cb),
+      (cb) => PeerId.createFromJSON(require('./fixtures/peer-b'), cb),
+      (cb) => PeerId.createFromJSON(require('./fixtures/peer-c'), cb)
+    ], (err, peers) => {
       expect(err).to.not.exist()
-
-      callback(null, secio.encrypt(new PeerId(digest, key), key, insecure))
+      peerA = peers[0]
+      peerB = peers[1]
+      peerC = peers[2]
+      done()
     })
   })
-}
 
-describe('secio', () => {
   it('exports a secio multicodec', () => {
     expect(secio.tag).to.equal('/secio/1.0.0')
   })
 
-  it('upgrades a connection', function (done) {
-    this.timeout(20 * 1000)
-
+  it('upgrades a connection', (done) => {
     const p = pair()
-    createSession(p[0], (err, local) => {
-      expect(err).to.not.exist()
 
-      createSession(p[1], (err, remote) => {
+    const aToB = secio.encrypt(peerB, peerA.privKey, p[0], (err) => expect(err).to.not.exist())
+    const bToA = secio.encrypt(peerA, peerB.privKey, p[1], (err) => expect(err).to.not.exist())
+
+    pull(
+      pull.values([Buffer.from('hello world')]),
+      aToB
+    )
+
+    pull(
+      bToA,
+      pull.collect((err, chunks) => {
         expect(err).to.not.exist()
-
-        pull(
-          pull.values([Buffer.from('hello world')]),
-          local
-        )
-
-        pull(
-          remote,
-          pull.collect((err, chunks) => {
-            expect(err).to.not.exist()
-            expect(chunks).to.eql([Buffer.from('hello world')])
-            done()
-          })
-        )
+        expect(chunks).to.eql([Buffer.from('hello world')])
+        done()
       })
-    })
+    )
   })
 
-  it('works over multistream-select', function (done) {
-    this.timeout(20 * 1000)
-
+  it('works over multistream-select', (done) => {
     const p = pair()
 
     const listener = new Listener()
@@ -78,32 +76,34 @@ describe('secio', () => {
       ], cb),
       (cb) => {
         listener.addHandler('/banana/1.0.0', (protocol, conn) => {
-          createSession(conn, (err, local) => {
-            expect(err).to.not.exist()
-            pull(
-              local,
-              pull.collect((err, chunks) => {
-                expect(err).to.not.exist()
-                expect(chunks).to.eql([Buffer.from('hello world')])
-                done()
-              })
-            )
-          })
+          const bToA = secio.encrypt(peerA, peerB.privKey, conn, (err) => expect(err).to.not.exist())
+
+          pull(
+            bToA,
+            pull.collect((err, chunks) => {
+              expect(err).to.not.exist()
+              expect(chunks).to.eql([Buffer.from('hello world')])
+              done()
+            })
+          )
         })
+
         cb()
       },
       (cb) => dialer.select('/banana/1.0.0', (err, conn) => {
         expect(err).to.not.exist()
 
-        createSession(conn, (err, remote) => {
-          expect(err).to.not.exist()
-          pull(
-            pull.values([Buffer.from('hello world')]),
-            remote
-          )
-          cb()
-        })
+        const aToB = secio.encrypt(peerB, peerA.privKey, conn, (err) => expect(err).to.not.exist())
+
+        pull(
+          pull.values([Buffer.from('hello world')]),
+          aToB
+        )
+        cb()
       })
-    ], (err) => expect(err).to.not.exist())
+    ])
+  })
+
+  it.skip('fails if we dialed to the wrong peer', (done) => {
   })
 })
