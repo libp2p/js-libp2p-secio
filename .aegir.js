@@ -15,17 +15,18 @@ module.exports = {
   hooks: {
     browser: {
       pre: (done) => {
-        PeerId.createFromJSON(peerNodeJSON, (err, id) => {
+        PeerId.createFromJSON(peerNodeJSON, (err, peerId) => {
           if (err) { throw err }
 
           const ws = new WS()
 
           listener = ws.createListener((conn) => {
-            const encrypted = secio.encrypt(id, id._privKey, conn, (err) => {
+            const encryptedConn = secio.encrypt(peerId, conn, undefined, (err) => {
               if (err) { throw err }
             })
 
-            pull(encrypted, encrypted)
+            // echo
+            pull(encryptedConn, encryptedConn)
           })
 
           listener.listen(ma, done)

@@ -27,9 +27,7 @@ module.exports = function exchange (state, cb) {
     },
     (cb) => crypto.generateKeys(state, cb)
   ], (err) => {
-    if (err) {
-      return cb(err)
-    }
+    if (err) { return cb(err) }
 
     log('2. exchange - finish')
     cb()

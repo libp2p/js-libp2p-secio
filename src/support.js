@@ -116,9 +116,7 @@ exports.digest = (buf, cb) => {
 exports.write = function write (state, msg, cb) {
   cb = cb || (() => {})
   pull(
-    pull.values([
-      msg
-    ]),
+    pull.values([msg]),
     lp.encode({fixed: true, bytes: 4}),
     pull.collect((err, res) => {
       if (err) {

@@ -8,7 +8,7 @@ const dirtyChai = require('dirty-chai')
 const expect = chai.expect
 chai.use(dirtyChai)
 const PeerId = require('peer-id')
-const crypto = require('libp2p-crypto')
+const Connection = require('interface-connection').Connection
 const parallel = require('async/parallel')
 const series = require('async/series')
 const Buffer = require('safe-buffer').Buffer
@@ -45,8 +45,8 @@ describe('secio', () => {
   it('upgrades a connection', (done) => {
     const p = pair()
 
-    const aToB = secio.encrypt(peerB, peerA.privKey, p[0], (err) => expect(err).to.not.exist())
-    const bToA = secio.encrypt(peerA, peerB.privKey, p[1], (err) => expect(err).to.not.exist())
+    const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, (err) => expect(err).to.not.exist())
+    const bToA = secio.encrypt(peerB, new Connection(p[1]), peerA, (err) => expect(err).to.not.exist())
 
     pull(
       pull.values([Buffer.from('hello world')]),
@@ -76,7 +76,7 @@ describe('secio', () => {
       ], cb),
       (cb) => {
         listener.addHandler('/banana/1.0.0', (protocol, conn) => {
-          const bToA = secio.encrypt(peerA, peerB.privKey, conn, (err) => expect(err).to.not.exist())
+          const bToA = secio.encrypt(peerB, conn, peerA, (err) => expect(err).to.not.exist())
 
           pull(
             bToA,
@@ -93,7 +93,7 @@ describe('secio', () => {
       (cb) => dialer.select('/banana/1.0.0', (err, conn) => {
         expect(err).to.not.exist()
 
-        const aToB = secio.encrypt(peerB, peerA.privKey, conn, (err) => expect(err).to.not.exist())
+        const aToB = secio.encrypt(peerA, conn, peerB, (err) => expect(err).to.not.exist())
 
         pull(
           pull.values([Buffer.from('hello world')]),
@@ -104,6 +104,44 @@ describe('secio', () => {
     ])
   })
 
-  it.skip('fails if we dialed to the wrong peer', (done) => {
+  it('establishes the connection even if the receiver does not know who is dialing', (done) => {
+    const p = pair()
+
+    const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, (err) => expect(err).to.not.exist())
+    const bToA = secio.encrypt(peerB, new Connection(p[1]), undefined, (err) => expect(err).to.not.exist())
+
+    pull(
+      pull.values([Buffer.from('hello world')]),
+      aToB
+    )
+
+    pull(
+      bToA,
+      pull.collect((err, chunks) => {
+        expect(err).to.not.exist()
+
+        expect(chunks).to.eql([Buffer.from('hello world')])
+
+        bToA.getPeerInfo((err, PeerInfo) => {
+          expect(err).to.not.exist()
+          expect(PeerInfo.id.toB58String()).to.equal(peerA.toB58String())
+          done()
+        })
+      })
+    )
+  })
+
+  it('fails if we dialed to the wrong peer', (done) => {
+    const p = pair()
+    let count = 0
+
+    function check (err) {
+      expect(err).to.exist()
+      if (++count === 2) { done() }
+    }
+
+    // we are using peerC Id on purpose to fail
+    secio.encrypt(peerA, p[0], peerC, check)
+    secio.encrypt(peerB, p[1], peerA, check)
   })
 })

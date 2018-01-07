@@ -53,8 +53,8 @@ suite.add('establish an encrypted channel', (deferred) => {
   const peerA = peers[0]
   const peerB = peers[1]
 
-  const aToB = secio.encrypt(peerB, peerA.privKey, p[0], (err) => { throw err })
-  const bToA = secio.encrypt(peerA, peerB.privKey, p[1], (err) => { throw err })
+  const aToB = secio.encrypt(peerA, p[0], peerB, (err) => { throw err })
+  const bToA = secio.encrypt(peerB, p[1], peerA, (err) => { throw err })
 
   sendData(aToB, bToA, {}, deferred)
 }, { defer: true })
@@ -83,8 +83,8 @@ cases.forEach((el) => {
     const peerA = peers[0]
     const peerB = peers[1]
 
-    const aToB = secio.encrypt(peerB, peerA.privKey, p[0], (err) => { throw err })
-    const bToA = secio.encrypt(peerA, peerB.privKey, p[1], (err) => { throw err })
+    const aToB = secio.encrypt(peerA, p[0], peerB, (err) => { throw err })
+    const bToA = secio.encrypt(peerB, p[1], peerA, (err) => { throw err })
 
     sendData(aToB, bToA, { times: times, size: size }, deferred)
   }, { defer: true })
