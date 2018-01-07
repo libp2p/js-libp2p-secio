@@ -24,7 +24,9 @@ describe('libp2p-secio', () => {
     expect(secio.tag).to.equal('/secio/1.0.0')
   })
 
-  it('upgrades a connection', (done) => {
+  it('upgrades a connection', function (done) {
+    this.timeout(20 * 1000)
+
     const p = pair()
     createSession(p[0], (err, local) => {
       expect(err).to.not.exist()
@@ -49,7 +51,9 @@ describe('libp2p-secio', () => {
     })
   })
 
-  it('works over multistream', (done) => {
+  it('works over multistream', function (done) {
+    this.timeout(20 * 1000)
+
     const p = pair()
 
     const listener = new Listener()

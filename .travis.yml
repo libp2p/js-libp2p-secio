@@ -8,13 +8,10 @@ matrix:
     env: CXX=g++-4.8
   - node_js: 8
     env: CXX=g++-4.8
-    #  - node_js: stable
-    #    env: CXX=g++-4.8
 
 script:
   - npm run lint
   - npm run test
-  - npm run coverage
 
 before_script:
   - export DISPLAY=:99.0
