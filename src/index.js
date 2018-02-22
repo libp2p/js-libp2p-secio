@@ -35,7 +35,7 @@ module.exports = {
       if (err) { return callback(err) }
 
       conn.getPeerInfo((err, peerInfo) => {
-        encryptedConnection.setInnerConn(state.secure)
+        encryptedConnection.setInnerConn(new Connection(state.secure, conn))
 
         if (err) { // no peerInfo yet, means I'm the receiver
           encryptedConnection.setPeerInfo(new PeerInfo(state.id.remote))
