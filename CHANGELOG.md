@@ -1,3 +1,13 @@
+<a name="0.9.3"></a>
+## [0.9.3](https://github.com/ipfs/js-libp2p-secio/compare/v0.9.2...v0.9.3) (2018-02-27)
+
+
+### Bug Fixes
+
+* cascading connection from encrypted connection to parent connection ([e205ca4](https://github.com/ipfs/js-libp2p-secio/commit/e205ca4))
+
+
+
 <a name="0.9.2"></a>
 ## [0.9.2](https://github.com/ipfs/js-libp2p-secio/compare/v0.9.1...v0.9.2) (2018-02-12)
 
