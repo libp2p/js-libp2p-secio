@@ -24,7 +24,7 @@ module.exports = function handshake (state, callback) {
     }
 
     // signal when the handshake is finished so that plumbing can happen
-    callback()
+    callback(err)
   })
 
   return state.stream
