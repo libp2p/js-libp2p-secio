@@ -1,3 +1,13 @@
+<a name="0.9.4"></a>
+## [0.9.4](https://github.com/ipfs/js-libp2p-secio/compare/v0.9.3...v0.9.4) (2018-03-28)
+
+
+### Bug Fixes
+
+* pass the handshake failure on ([6d09b47](https://github.com/ipfs/js-libp2p-secio/commit/6d09b47))
+
+
+
 <a name="0.9.3"></a>
 ## [0.9.3](https://github.com/ipfs/js-libp2p-secio/compare/v0.9.2...v0.9.3) (2018-02-27)
 
