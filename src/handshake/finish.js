@@ -12,7 +12,7 @@ const crypto = require('./crypto')
 
 // step 3. Finish
 // -- send expected message to verify encryption works (send local nonce)
-module.exports = function finish (state, cb) {
+module.exports = function finish (state, callback) {
   log('3. finish - start')
 
   const proto = state.protocols
@@ -40,7 +40,7 @@ module.exports = function finish (state, cb) {
         sink (read) {
         }
       })
-      cb(err)
+      callback(err)
     }
 
     if (err) return fail(err)
@@ -55,6 +55,6 @@ module.exports = function finish (state, cb) {
 
     // Awesome that's all folks.
     state.secure.resolve(shake.handshake.rest())
-    cb()
+    callback()
   })
 }

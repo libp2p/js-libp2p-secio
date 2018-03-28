@@ -11,7 +11,7 @@ log.error = debug('libp2p:secio:error')
 
 // step 1. Propose
 // -- propose cipher suite + send pubkeys + nonce
-module.exports = function propose (state, cb) {
+module.exports = function propose (state, callback) {
   log('1. propose - start')
 
   log('1. propose - writing proposal')
@@ -26,10 +26,10 @@ module.exports = function propose (state, cb) {
     (cb) => crypto.selectProtocols(state, cb)
   ], (err) => {
     if (err) {
-      return cb(err)
+      return callback(err)
     }
 
     log('1. propose - finish')
-    cb()
+    callback()
   })
 }

@@ -11,7 +11,7 @@ log.error = debug('libp2p:secio:error')
 
 // step 2. Exchange
 // -- exchange (signed) ephemeral keys. verify signatures.
-module.exports = function exchange (state, cb) {
+module.exports = function exchange (state, callback) {
   log('2. exchange - start')
 
   log('2. exchange - writing exchange')
@@ -27,9 +27,9 @@ module.exports = function exchange (state, cb) {
     },
     (cb) => crypto.generateKeys(state, cb)
   ], (err) => {
-    if (err) { return cb(err) }
+    if (err) { return callback(err) }
 
     log('2. exchange - finish')
-    cb()
+    callback()
   })
 }

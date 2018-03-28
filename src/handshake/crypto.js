@@ -188,8 +188,8 @@ exports.generateKeys = (state, callback) => {
       log('2.3. mac + cipher')
 
       parallel([
-        (cb) => support.makeMacAndCipher(state.protocols.local, cb),
-        (cb) => support.makeMacAndCipher(state.protocols.remote, cb)
+        (_cb) => support.makeMacAndCipher(state.protocols.local, _cb),
+        (_cb) => support.makeMacAndCipher(state.protocols.remote, _cb)
       ], cb)
     }
   ], callback)
