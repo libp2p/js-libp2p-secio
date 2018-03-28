@@ -18,6 +18,8 @@ const Listener = ms.Listener
 const Dialer = ms.Dialer
 
 const secio = require('../src')
+const State = require('../src/state')
+const handshake = require('../src/handshake')
 
 describe('secio', () => {
   let peerA
@@ -143,5 +145,31 @@ describe('secio', () => {
     // we are using peerC Id on purpose to fail
     secio.encrypt(peerA, new Connection(p[0]), peerC, check)
     secio.encrypt(peerB, new Connection(p[1]), peerA, check)
+  })
+
+  it('bubbles errors from handshake failures properly', (done) => {
+    const p = pair()
+    const timeout = 60 * 1000 * 5
+    const stateA = new State(peerA, peerC, timeout, () => { })
+    const stateB = new State(peerB, peerA, timeout, () => { })
+    const connA = new Connection(p[0])
+    const connB = new Connection(p[1])
+
+    function finish (err) {
+      expect(err).to.exist()
+      done()
+    }
+
+    pull(
+      connA,
+      handshake(stateA, finish),
+      connA
+    )
+
+    pull(
+      connB,
+      handshake(stateB, finish),
+      connB
+    )
   })
 })
