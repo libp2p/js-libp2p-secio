@@ -17,6 +17,10 @@
 
 This repo contains the JavaScript implementation of secio, an encryption protocol used in libp2p. This is based on this [go implementation](https://github.com/libp2p/go-libp2p-secio).
 
+## Lead Maintainer
+
+[Friedel Ziegelmayer](https://github.com/dignifiedquire/)
+
 ## Table of Contents
 
 - [Install](#install)
