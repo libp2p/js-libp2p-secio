@@ -1,7 +1,10 @@
 'use strict'
 
 const Benchmark = require('benchmark')
-const pull = require('pull-stream')
+const pull = require('pull-stream/pull')
+const infinite = require('pull-stream/sources/infinite')
+const take = require('pull-stream/throughs/take')
+const drain = require('pull-stream/sinks/drain')
 const Connection = require('interface-connection').Connection
 const parallel = require('async/parallel')
 const pair = require('pull-pair/duplex')
@@ -16,8 +19,8 @@ function sendData (a, b, opts, finish) {
   opts = Object.assign({ times: 1, size: 100 }, opts)
 
   pull(
-    pull.infinite(() => Buffer.allocUnsafe(opts.size)),
-    pull.take(opts.times),
+    infinite(() => Buffer.allocUnsafe(opts.size)),
+    take(opts.times),
     a
   )
 
@@ -25,7 +28,7 @@ function sendData (a, b, opts, finish) {
 
   pull(
     b,
-    pull.drain((data) => {
+    drain((data) => {
       length += data.length
     }, () => {
       if (length !== opts.times * opts.size) {

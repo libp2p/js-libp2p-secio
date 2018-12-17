@@ -1,6 +1,7 @@
 'use strict'
 
-const pull = require('pull-stream')
+const pull = require('pull-stream/pull')
+const pullError = require('pull-stream/sources/error')
 const handshake = require('pull-handshake')
 const debug = require('debug')
 
@@ -36,7 +37,7 @@ module.exports = function finish (state, callback) {
     const fail = (err) => {
       log.error(err)
       state.secure.resolve({
-        source: pull.error(err),
+        source: pullError(err),
         sink (read) {
         }
       })

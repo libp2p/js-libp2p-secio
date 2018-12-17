@@ -2,7 +2,9 @@
 
 const mh = require('multihashing-async')
 const lp = require('pull-length-prefixed')
-const pull = require('pull-stream')
+const pull = require('pull-stream/pull')
+const values = require('pull-stream/sources/values')
+const collect = require('pull-stream/sinks/collect')
 const crypto = require('libp2p-crypto')
 const parallel = require('async/parallel')
 
@@ -116,9 +118,9 @@ exports.digest = (buf, cb) => {
 exports.write = function write (state, msg, cb) {
   cb = cb || (() => {})
   pull(
-    pull.values([msg]),
+    values([msg]),
     lp.encode({ fixed: true, bytes: 4 }),
-    pull.collect((err, res) => {
+    collect((err, res) => {
       if (err) {
         return cb(err)
       }

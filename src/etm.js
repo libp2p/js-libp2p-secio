@@ -1,6 +1,8 @@
 'use strict'
 
-const pull = require('pull-stream')
+const pull = require('pull-stream/pull')
+const map = require('pull-stream/throughs/map')
+const asyncMap = require('pull-stream/throughs/async-map')
 const lp = require('pull-length-prefixed')
 
 const lpOpts = {
@@ -11,7 +13,7 @@ const lpOpts = {
 exports.createBoxStream = (cipher, mac) => {
   return pull(
     ensureBuffer(),
-    pull.asyncMap((chunk, cb) => {
+    asyncMap((chunk, cb) => {
       cipher.encrypt(chunk, (err, data) => {
         if (err) {
           return cb(err)
@@ -34,7 +36,7 @@ exports.createUnboxStream = (decipher, mac) => {
   return pull(
     ensureBuffer(),
     lp.decode(lpOpts),
-    pull.asyncMap((chunk, cb) => {
+    asyncMap((chunk, cb) => {
       const l = chunk.length
       const macSize = mac.length
 
@@ -69,7 +71,7 @@ exports.createUnboxStream = (decipher, mac) => {
 }
 
 function ensureBuffer () {
-  return pull.map((c) => {
+  return map((c) => {
     if (typeof c === 'string') {
       return Buffer.from(c, 'utf-8')
     }

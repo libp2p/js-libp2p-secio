@@ -1,6 +1,6 @@
 'use strict'
 
-const pull = require('pull-stream')
+const pull = require('pull-stream/pull')
 const Connection = require('interface-connection').Connection
 const assert = require('assert')
 const PeerInfo = require('peer-info')
