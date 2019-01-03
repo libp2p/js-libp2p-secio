@@ -26,12 +26,12 @@
   "license": "MIT",
   "dependencies": {
     "async": "^2.6.1",
-    "debug": "^4.1.0",
-    "interface-connection": "~0.3.2",
-    "libp2p-crypto": "~0.14.0",
+    "debug": "^4.1.1",
+    "interface-connection": "~0.3.3",
+    "libp2p-crypto": "~0.15.0",
     "multihashing-async": "~0.5.1",
-    "peer-id": "~0.12.0",
-    "peer-info": "~0.14.1",
+    "peer-id": "~0.12.1",
+    "peer-info": "~0.15.0",
     "protons": "^1.0.1",
     "pull-defer": "~0.2.3",
     "pull-handshake": "^1.1.4",
@@ -39,7 +39,7 @@
     "pull-stream": "^3.6.9"
   },
   "devDependencies": {
-    "aegir": "^17.0.1",
+    "aegir": "^18.0.2",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
     "dirty-chai": "^2.0.1",

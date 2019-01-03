@@ -117,7 +117,7 @@ exports.write = function write (state, msg, cb) {
   cb = cb || (() => {})
   pull(
     pull.values([msg]),
-    lp.encode({fixed: true, bytes: 4}),
+    lp.encode({ fixed: true, bytes: 4 }),
     pull.collect((err, res) => {
       if (err) {
         return cb(err)
@@ -129,5 +129,5 @@ exports.write = function write (state, msg, cb) {
 }
 
 exports.read = function read (reader, cb) {
-  lp.decodeFromReader(reader, {fixed: true, bytes: 4}, cb)
+  lp.decodeFromReader(reader, { fixed: true, bytes: 4 }, cb)
 }
