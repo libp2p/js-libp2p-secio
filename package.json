@@ -1,6 +1,6 @@
 {
   "name": "libp2p-secio",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Secio implementation in JavaScript",
   "leadMaintainer": "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
   "main": "src/index.js",
@@ -64,6 +64,7 @@
     "David Dias <daviddias.p@gmail.com>",
     "Dmitriy Ryajov <dryajov@gmail.com>",
     "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
+    "Hugo Dias <hugomrdias@gmail.com>",
     "Jacob Heun <jacobheun@gmail.com>",
     "Pedro Teixeira <i@pgte.me>",
     "Richard Littauer <richard.littauer@gmail.com>",
