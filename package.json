@@ -26,12 +26,12 @@
   "license": "MIT",
   "dependencies": {
     "async": "^2.6.1",
-    "debug": "^4.1.0",
+    "debug": "^4.1.1",
     "interface-connection": "~0.3.2",
-    "libp2p-crypto": "libp2p/js-libp2p-crypto#feat/bundle-size",
-    "multihashing-async": "~0.5.1",
-    "peer-id": "libp2p/js-peer-id#feat/bundle-size",
-    "peer-info": "libp2p/js-peer-info#feat/bundle-size",
+    "libp2p-crypto": "~0.16.0",
+    "multihashing-async": "~0.5.2",
+    "peer-id": "~0.12.2",
+    "peer-info": "~0.15.1",
     "protons": "^1.0.1",
     "pull-defer": "~0.2.3",
     "pull-handshake": "^1.1.4",
@@ -39,12 +39,12 @@
     "pull-stream": "^3.6.9"
   },
   "devDependencies": {
-    "aegir": "github:ipfs/aegir#feat/make-exp-build-test-default",
+    "aegir": "^18.0.3",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
     "dirty-chai": "^2.0.1",
-    "libp2p-websockets": "libp2p/js-libp2p-websockets#fix/bundle-size",
-    "multistream-select": "~0.14.3",
+    "libp2p-websockets": "~0.12.1",
+    "multistream-select": "~0.14.4",
     "pull-goodbye": "~0.0.2",
     "pull-pair": "^1.1.0"
   },
