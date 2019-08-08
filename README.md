@@ -53,7 +53,7 @@ The current `secio` tag, usable in `multistream`.
 - `remotePeerId: PeerId` - A PeerId object containing the Public and/or Id of the node we are doing the SECIO handshake with.
 - `callback: Function` - Optional, Called if an error happens during the initialization.
 
-Returns an encrypted [Connection object](https://github.com/libp2p/interface-connection) that is the upgraded `plainTextConnection` with now having every byte encripted.
+Returns an encrypted [Connection object](https://github.com/libp2p/interface-connection) that is the upgraded `plainTextConnection` with now having every byte encrypted.
 
 Both plainTextConnection and encryptedConnection are at their base, PullStreams.
 
