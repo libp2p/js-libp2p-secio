@@ -1,17 +1,16 @@
 'use strict'
 
-const protons = require('protons')
 const PeerId = require('peer-id')
 const crypto = require('libp2p-crypto')
-const parallel = require('async/parallel')
-const waterfall = require('async/waterfall')
 const debug = require('debug')
 const log = debug('libp2p:secio')
 log.error = debug('libp2p:secio:error')
 
-const pbm = protons(require('./secio.proto'))
+const pbm = require('./secio.proto')
 
 const support = require('../support')
+
+const { UnexpectedPeerError } = require('libp2p-interfaces/src/crypto/errors')
 
 // nonceSize is the size of our nonces (in bytes)
 const nonceSize = 16
@@ -29,38 +28,30 @@ exports.createProposal = (state) => {
   return state.proposalEncoded.out
 }
 
-exports.createExchange = (state, callback) => {
-  crypto.keys.generateEphemeralKeyPair(state.protocols.local.curveT, (err, res) => {
-    if (err) {
-      return callback(err)
-    }
+exports.createExchange = async (state) => {
+  const res = await crypto.keys.generateEphemeralKeyPair(state.protocols.local.curveT)
 
-    state.ephemeralKey.local = res.key
-    state.shared.generate = res.genSharedKey
+  state.ephemeralKey.local = res.key
+  state.shared.generate = res.genSharedKey
 
-    // Gather corpus to sign.
-    const selectionOut = Buffer.concat([
-      state.proposalEncoded.out,
-      state.proposalEncoded.in,
-      state.ephemeralKey.local
-    ])
+  // Gather corpus to sign.
+  const selectionOut = Buffer.concat([
+    state.proposalEncoded.out,
+    state.proposalEncoded.in,
+    state.ephemeralKey.local
+  ])
 
-    state.key.local.sign(selectionOut, (err, sig) => {
-      if (err) {
-        return callback(err)
-      }
+  const sig = await state.key.local.sign(selectionOut)
 
-      state.exchange.out = {
-        epubkey: state.ephemeralKey.local,
-        signature: sig
-      }
+  state.exchange.out = {
+    epubkey: state.ephemeralKey.local,
+    signature: sig
+  }
 
-      callback(null, pbm.Exchange.encode(state.exchange.out))
-    })
-  })
+  return pbm.Exchange.encode(state.exchange.out)
 }
 
-exports.identify = (state, msg, callback) => {
+exports.identify = async (state, msg) => {
   log('1.1 identify')
 
   state.proposalEncoded.in = msg
@@ -69,26 +60,21 @@ exports.identify = (state, msg, callback) => {
 
   state.key.remote = crypto.keys.unmarshalPublicKey(pubkey)
 
-  PeerId.createFromPubKey(pubkey.toString('base64'), (err, remoteId) => {
-    if (err) {
-      return callback(err)
-    }
+  const remoteId = await PeerId.createFromPubKey(pubkey.toString('base64'))
 
-    // If we know who we are dialing to, double check
-    if (state.id.remote) {
-      if (state.id.remote.toB58String() !== remoteId.toB58String()) {
-        return callback(new Error('dialed to the wrong peer, Ids do not match'))
-      }
-    } else {
-      state.id.remote = remoteId
+  // If we know who we are dialing to, double check
+  if (state.id.remote) {
+    if (state.id.remote.toString() !== remoteId.toString()) {
+      throw new UnexpectedPeerError('Dialed to the wrong peer: IDs do not match!')
     }
+  } else {
+    state.id.remote = remoteId
+  }
 
-    log('1.1 identify - %s - identified remote peer as %s', state.id.local.toB58String(), state.id.remote.toB58String())
-    callback()
-  })
+  log('1.1 identify - %s - identified remote peer as %s', state.id.local.toB58String(), state.id.remote.toB58String())
 }
 
-exports.selectProtocols = (state, callback) => {
+exports.selectProtocols = async (state) => {
   log('1.2 selection')
 
   const local = {
@@ -107,30 +93,26 @@ exports.selectProtocols = (state, callback) => {
     nonce: state.proposal.in.rand
   }
 
-  support.selectBest(local, remote, (err, selected) => {
-    if (err) {
-      return callback(err)
-    }
-    // we use the same params for both directions (must choose same curve)
-    // WARNING: if they dont SelectBest the same way, this won't work...
-    state.protocols.remote = {
-      order: selected.order,
-      curveT: selected.curveT,
-      cipherT: selected.cipherT,
-      hashT: selected.hashT
-    }
+  const selected = await support.selectBest(local, remote)
 
-    state.protocols.local = {
-      order: selected.order,
-      curveT: selected.curveT,
-      cipherT: selected.cipherT,
-      hashT: selected.hashT
-    }
-    callback()
-  })
+  // we use the same params for both directions (must choose same curve)
+  // WARNING: if they dont SelectBest the same way, this won't work...
+  state.protocols.remote = {
+    order: selected.order,
+    curveT: selected.curveT,
+    cipherT: selected.cipherT,
+    hashT: selected.hashT
+  }
+
+  state.protocols.local = {
+    order: selected.order,
+    curveT: selected.curveT,
+    cipherT: selected.cipherT,
+    hashT: selected.hashT
+  }
 }
 
-exports.verify = (state, msg, callback) => {
+exports.verify = async (state, msg) => {
   log('2.1. verify')
 
   state.exchange.in = pbm.Exchange.decode(msg)
@@ -142,57 +124,43 @@ exports.verify = (state, msg, callback) => {
     state.ephemeralKey.remote
   ])
 
-  state.key.remote.verify(selectionIn, state.exchange.in.signature, (err, sigOk) => {
-    if (err) {
-      return callback(err)
-    }
+  const sigOk = await state.key.remote.verify(selectionIn, state.exchange.in.signature)
 
-    if (!sigOk) {
-      return callback(new Error('Bad signature'))
-    }
+  if (!sigOk) {
+    throw new Error('Bad signature')
+  }
 
-    log('2.1. verify - signature verified')
-    callback()
-  })
+  log('2.1. verify - signature verified')
 }
 
-exports.generateKeys = (state, callback) => {
+exports.generateKeys = async (state) => {
   log('2.2. keys')
 
-  waterfall([
-    (cb) => state.shared.generate(state.exchange.in.epubkey, cb),
-    (secret, cb) => {
-      state.shared.secret = secret
+  const secret = await state.shared.generate(state.exchange.in.epubkey)
 
-      crypto.keys.keyStretcher(
-        state.protocols.local.cipherT,
-        state.protocols.local.hashT,
-        state.shared.secret,
-        cb
-      )
-    },
-    (keys, cb) => {
-      // use random nonces to decide order.
-      if (state.protocols.local.order > 0) {
-        state.protocols.local.keys = keys.k1
-        state.protocols.remote.keys = keys.k2
-      } else if (state.protocols.local.order < 0) {
-        // swap
-        state.protocols.local.keys = keys.k2
-        state.protocols.remote.keys = keys.k1
-      } else {
-        // we should've bailed before state. but if not, bail here.
-        return cb(new Error('you are trying to talk to yourself'))
-      }
+  state.shared.secret = secret
 
-      log('2.3. mac + cipher')
+  const keys = await crypto.keys.keyStretcher(
+    state.protocols.local.cipherT,
+    state.protocols.local.hashT,
+    state.shared.secret)
 
-      parallel([
-        (_cb) => support.makeMacAndCipher(state.protocols.local, _cb),
-        (_cb) => support.makeMacAndCipher(state.protocols.remote, _cb)
-      ], cb)
-    }
-  ], callback)
+  // use random nonces to decide order.
+  if (state.protocols.local.order > 0) {
+    state.protocols.local.keys = keys.k1
+    state.protocols.remote.keys = keys.k2
+  } else if (state.protocols.local.order < 0) {
+    // swap
+    state.protocols.local.keys = keys.k2
+    state.protocols.remote.keys = keys.k1
+  } else {
+    // we should've bailed before state. but if not, bail here.
+    throw new Error('you are trying to talk to yourself')
+  }
+
+  log('2.3. mac + cipher')
+
+  await Promise.all([state.protocols.local, state.protocols.remote].map(data => support.makeMacAndCipher(data)))
 }
 
 exports.verifyNonce = (state, n2) => {

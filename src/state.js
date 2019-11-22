@@ -1,28 +1,12 @@
 'use strict'
 
-const handshake = require('pull-handshake')
-const deferred = require('pull-defer')
-
 class State {
-  constructor (localId, remoteId, timeout, callback) {
-    if (typeof timeout === 'function') {
-      callback = timeout
-      timeout = undefined
-    }
-
+  constructor (localId, remoteId) {
     this.setup()
 
     this.id.local = localId
-    // TODO use remoteId to verify PeersIdentity
     this.id.remote = remoteId
     this.key.local = localId.privKey
-    this.timeout = timeout || 60 * 1000
-    callback = callback || (() => {})
-
-    this.secure = deferred.duplex()
-    this.stream = handshake({ timeout: this.timeout }, callback)
-    this.shake = this.stream.handshake
-    delete this.stream.handshake
   }
 
   setup () {

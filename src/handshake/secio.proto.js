@@ -1,6 +1,8 @@
 'use strict'
 
-module.exports = `message Propose {
+const protons = require('protons')
+
+module.exports = protons(`message Propose {
   optional bytes rand = 1;
   optional bytes pubkey = 2;
   optional string exchanges = 3;
@@ -11,4 +13,4 @@ module.exports = `message Propose {
 message Exchange {
   optional bytes epubkey = 1;
   optional bytes signature = 2;
-}`
+}`)

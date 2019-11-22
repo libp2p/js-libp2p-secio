@@ -1,73 +1,70 @@
 'use strict'
 
+/* eslint-disable no-console */
+
 const Benchmark = require('benchmark')
-const pull = require('pull-stream/pull')
-const infinite = require('pull-stream/sources/infinite')
-const take = require('pull-stream/throughs/take')
-const drain = require('pull-stream/sinks/drain')
-const Connection = require('interface-connection').Connection
-const parallel = require('async/parallel')
-const pair = require('pull-pair/duplex')
 const PeerId = require('peer-id')
 
-const secio = require('../src')
+const pipe = require('it-pipe')
+const { reduce } = require('streaming-iterables')
+const DuplexPair = require('it-pair/duplex')
+
+const secio = require('..')
 
 const suite = new Benchmark.Suite('secio')
 let peers
 
-function sendData (a, b, opts, finish) {
+async function sendData (a, b, opts) {
   opts = Object.assign({ times: 1, size: 100 }, opts)
 
-  pull(
-    infinite(() => Buffer.allocUnsafe(opts.size)),
-    take(opts.times),
+  let i = opts.times
+
+  pipe(
+    function * () {
+      while (i--) {
+        yield Buffer.allocUnsafe(opts.size)
+      }
+    },
     a
   )
 
-  let length = 0
-
-  pull(
+  const res = await pipe(
     b,
-    drain((data) => {
-      length += data.length
-    }, () => {
-      if (length !== opts.times * opts.size) {
-        throw new Error('Did not receive enough chunks')
-      }
-      finish.resolve()
-    })
+    reduce((acc, val) => acc + val.length, 0)
   )
-}
 
-function ifErr (err) {
-  if (err) {
-    throw err
+  if (res !== opts.times * opts.size) {
+    throw new Error('Did not receive enough chunks')
   }
 }
 
-suite.add('create peers for test', (deferred) => {
-  parallel([
-    (cb) => PeerId.createFromJSON(require('./peer-a'), cb),
-    (cb) => PeerId.createFromJSON(require('./peer-b'), cb)
-  ], (err, _peers) => {
-    if (err) { throw err }
-    peers = _peers
-
+suite.add('create peers for test', {
+  defer: true,
+  fn: async (deferred) => {
+    peers = await Promise.all([
+      PeerId.createFromJSON(require('./peer-a')),
+      PeerId.createFromJSON(require('./peer-b'))
+    ])
     deferred.resolve()
-  })
-}, { defer: true })
+  }
+})
+suite.add('establish an encrypted channel', {
+  defer: true,
+  fn: async (deferred) => {
+    const p = DuplexPair()
 
-suite.add('establish an encrypted channel', (deferred) => {
-  const p = pair()
+    const peerA = peers[0]
+    const peerB = peers[1]
 
-  const peerA = peers[0]
-  const peerB = peers[1]
+    const [aToB, bToA] = await Promise.all([
+      secio.secureInbound(peerA, p[0], peerB),
+      secio.secureOutbound(peerB, p[1], peerA)
+    ])
 
-  const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, ifErr)
-  const bToA = secio.encrypt(peerB, new Connection(p[1]), peerA, ifErr)
-
-  sendData(aToB, bToA, {}, deferred)
-}, { defer: true })
+    await sendData(aToB.conn, bToA.conn, {})
+    deferred.resolve()
+  }
+})
 
 const cases = [
   [10, 262144],
@@ -81,23 +78,32 @@ cases.forEach((el) => {
   const times = el[0]
   const size = el[1]
 
-  suite.add(`send plaintext ${times} x ${size} bytes`, (deferred) => {
-    const p = pair()
+  suite.add(`send plaintext ${times} x ${size} bytes`, {
+    defer: true,
+    fn: async (deferred) => {
+      const p = DuplexPair()
+      await sendData(p[0], p[1], { times: times, size: size })
+      deferred.resolve()
+    }
+  })
 
-    sendData(p[0], p[1], { times: times, size: size }, deferred)
-  }, { defer: true })
+  suite.add(`send encrypted ${times} x ${size} bytes`, {
+    defer: true,
+    fn: async (deferred) => {
+      const p = DuplexPair()
 
-  suite.add(`send encrypted ${times} x ${size} bytes`, (deferred) => {
-    const p = pair()
+      const peerA = peers[0]
+      const peerB = peers[1]
 
-    const peerA = peers[0]
-    const peerB = peers[1]
+      const [aToB, bToA] = await Promise.all([
+        secio.secureInbound(peerA, p[0], peerB),
+        secio.secureOutbound(peerB, p[1], peerA)
+      ])
 
-    const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, ifErr)
-    const bToA = secio.encrypt(peerB, new Connection(p[1]), peerA, ifErr)
-
-    sendData(aToB, bToA, { times: times, size: size }, deferred)
-  }, { defer: true })
+      await sendData(aToB.conn, bToA.conn, { times: times, size: size })
+      deferred.resolve()
+    }
+  })
 })
 
 suite.on('cycle', (event) => {

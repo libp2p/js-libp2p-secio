@@ -1,58 +1,33 @@
 'use strict'
 
-const pull = require('pull-stream/pull')
-const Connection = require('interface-connection').Connection
 const assert = require('assert')
-const PeerInfo = require('peer-info')
 const debug = require('debug')
-const once = require('once')
 const log = debug('libp2p:secio')
 log.error = debug('libp2p:secio:error')
 
 const handshake = require('./handshake')
 const State = require('./state')
+const Wrap = require('it-pb-rpc')
+const { int32BEDecode, int32BEEncode } = require('it-length-prefixed')
+
+async function secure (localPeer, duplex, remotePeer) { // returns duplex
+  assert(localPeer, 'no local private key provided')
+  assert(duplex, 'no connection for the handshake provided')
+
+  const state = new State(localPeer, remotePeer)
+  const wrapped = Wrap(duplex, { lengthDecoder: int32BEDecode, lengthEncoder: int32BEEncode })
+  await handshake(state, wrapped)
+
+  return {
+    conn: state.secure,
+    remotePeer: state.id.remote
+  }
+}
 
 module.exports = {
-  tag: '/secio/1.0.0',
-  encrypt (localId, conn, remoteId, callback) {
-    assert(localId, 'no local private key provided')
-    assert(conn, 'no connection for the handshake  provided')
+  protocol: '/secio/1.0.0',
 
-    if (typeof remoteId === 'function') {
-      callback = remoteId
-      remoteId = undefined
-    }
-
-    callback = once(callback || function (err) {
-      if (err) { log.error(err) }
-    })
-
-    const timeout = 60 * 1000 * 5
-
-    const state = new State(localId, remoteId, timeout, callback)
-
-    function finish (err) {
-      if (err) { return callback(err) }
-
-      conn.getPeerInfo((err, peerInfo) => {
-        encryptedConnection.setInnerConn(new Connection(state.secure, conn))
-
-        if (err) { // no peerInfo yet, means I'm the receiver
-          encryptedConnection.setPeerInfo(new PeerInfo(state.id.remote))
-        }
-
-        callback()
-      })
-    }
-
-    const encryptedConnection = new Connection(undefined, conn)
-
-    pull(
-      conn,
-      handshake(state, finish),
-      conn
-    )
-
-    return encryptedConnection
-  }
+  // since SECIO is symetric, we only need one function here
+  secureInbound: secure,
+  secureOutbound: secure
 }
