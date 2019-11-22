@@ -1,6 +1,6 @@
 {
   "name": "libp2p-secio",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Secio implementation in JavaScript",
   "leadMaintainer": "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
   "main": "src/index.js",
