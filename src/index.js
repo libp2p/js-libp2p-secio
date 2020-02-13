@@ -1,6 +1,5 @@
 'use strict'
 
-const assert = require('assert')
 const debug = require('debug')
 const log = debug('libp2p:secio')
 log.error = debug('libp2p:secio:error')
@@ -11,8 +10,12 @@ const Wrap = require('it-pb-rpc')
 const { int32BEDecode, int32BEEncode } = require('it-length-prefixed')
 
 async function secure (localPeer, duplex, remotePeer) { // returns duplex
-  assert(localPeer, 'no local private key provided')
-  assert(duplex, 'no connection for the handshake provided')
+  if (!localPeer) {
+    throw new Error('no local private key provided')
+  }
+  if (!duplex) {
+    throw new Error('no connection for the handshake provided')
+  }
 
   const state = new State(localPeer, remotePeer)
   const wrapped = Wrap(duplex, { lengthDecoder: int32BEDecode, lengthEncoder: int32BEEncode })
