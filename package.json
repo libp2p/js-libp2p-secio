@@ -1,6 +1,6 @@
 {
   "name": "libp2p-secio",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "Secio implementation in JavaScript",
   "leadMaintainer": "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
   "main": "src/index.js",
@@ -63,6 +63,7 @@
   },
   "homepage": "https://github.com/ipfs/js-libp2p-secio",
   "contributors": [
+    "Alex Potsides <alex@achingbrain.net>",
     "David Dias <daviddias.p@gmail.com>",
     "Dmitriy Ryajov <dryajov@gmail.com>",
     "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
