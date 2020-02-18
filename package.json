@@ -44,7 +44,7 @@
     "protons": "^1.1.0"
   },
   "devDependencies": {
-    "aegir": "^20.5.0",
+    "aegir": "^21.0.2",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
     "dirty-chai": "^2.0.1",
