@@ -1,5 +1,6 @@
 'use strict'
 
+const { Buffer } = require('buffer')
 const mh = require('multihashing-async')
 const crypto = require('libp2p-crypto')
 

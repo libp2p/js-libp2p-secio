@@ -1,5 +1,6 @@
 'use strict'
 
+const { Buffer } = require('buffer')
 const PeerId = require('peer-id')
 const crypto = require('libp2p-crypto')
 const debug = require('debug')

@@ -6,7 +6,7 @@ const { InvalidCryptoTransmissionError } = require('libp2p-interfaces/src/crypto
 exports.createBoxStream = (cipher, mac) => {
   return async function * (source) {
     for await (const chunk of source) {
-      const data = await cipher.encrypt(chunk)
+      const data = await cipher.encrypt(BufferList.isBufferList(chunk) ? chunk.slice() : chunk)
       const digest = await mac.digest(data)
       yield new BufferList([data, digest])
     }

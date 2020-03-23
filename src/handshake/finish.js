@@ -9,7 +9,6 @@ const pipe = require('it-pipe')
 const lp = require('it-length-prefixed')
 const Wrap = require('it-pb-rpc')
 const { int32BEEncode, int32BEDecode } = lp
-const ensureBuffer = require('it-buffer')
 
 const etm = require('../etm')
 const crypto = require('./crypto')
@@ -26,12 +25,10 @@ module.exports = async function finish (state, wrapped) {
 
   pipe(
     secure, // this is FROM the user
-    ensureBuffer,
     etm.createBoxStream(proto.local.cipher, proto.local.mac),
     lp.encode({ lengthEncoder: int32BEEncode }),
     network, // and gets piped INTO and FROM the network
     lp.decode({ lengthDecoder: int32BEDecode }),
-    ensureBuffer,
     etm.createUnboxStream(proto.remote.cipher, proto.remote.mac),
     secure // and gets piped TO the user
   )
