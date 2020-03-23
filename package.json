@@ -1,6 +1,6 @@
 {
   "name": "libp2p-secio",
-  "version": "0.12.3",
+  "version": "0.12.4",
   "description": "Secio implementation in JavaScript",
   "leadMaintainer": "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
   "main": "src/index.js",
@@ -62,18 +62,16 @@
   },
   "homepage": "https://github.com/ipfs/js-libp2p-secio",
   "contributors": [
-    "Alex Potsides <alex@achingbrain.net>",
     "David Dias <daviddias.p@gmail.com>",
-    "Dmitriy Ryajov <dryajov@gmail.com>",
     "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
-    "Hugo Dias <hugomrdias@gmail.com>",
     "Jacob Heun <jacobheun@gmail.com>",
+    "Hugo Dias <hugomrdias@gmail.com>",
     "Maciej Krüger <mkg20001@gmail.com>",
-    "Pedro Teixeira <i@pgte.me>",
     "Richard Littauer <richard.littauer@gmail.com>",
-    "Vasco Santos <vasco.santos@ua.pt>",
+    "ᴠɪᴄᴛᴏʀ ʙᴊᴇʟᴋʜᴏʟᴍ <victorbjelkholm@gmail.com>",
     "Vasco Santos <vasco.santos@moxy.studio>",
-    "Victor Bjelkholm <victorbjelkholm@gmail.com>",
-    "greenkeeperio-bot <support@greenkeeper.io>"
+    "Dmitriy Ryajov <dryajov@gmail.com>",
+    "Pedro Teixeira <i@pgte.me>",
+    "Alex Potsides <alex@achingbrain.net>"
   ]
 }
