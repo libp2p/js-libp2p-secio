@@ -1,3 +1,13 @@
+<a name="0.12.4"></a>
+## [0.12.4](https://github.com/ipfs/js-libp2p-secio/compare/v0.12.3...v0.12.4) (2020-03-23)
+
+
+### Bug Fixes
+
+* add buffer ([#118](https://github.com/ipfs/js-libp2p-secio/issues/118)) ([914eb4f](https://github.com/ipfs/js-libp2p-secio/commit/914eb4f))
+
+
+
 <a name="0.12.3"></a>
 ## [0.12.3](https://github.com/ipfs/js-libp2p-secio/compare/v0.12.2...v0.12.3) (2020-02-13)
 
