@@ -6,6 +6,7 @@ const dirtyChai = require('dirty-chai')
 const expect = chai.expect
 chai.use(dirtyChai)
 
+const PeerId = require('peer-id')
 const duplexPair = require('it-pair/duplex')
 const Handshake = require('it-pb-rpc')
 const Secio = require('../src')
@@ -32,7 +33,7 @@ describe('secio', () => {
 
   it('performs a spec compliant inbound exchange', async () => {
     const [inboundConnection, outboundConnection] = duplexPair()
-    await Promise.all([
+    const [result] = await Promise.all([
       Secio.secureInbound(remotePeer, inboundConnection, null),
       (async () => {
         const wrap = Handshake(outboundConnection)
@@ -102,12 +103,16 @@ describe('secio', () => {
         expect(ourNonce.slice()).to.eql(state.proposal.out.rand)
       })()
     ])
+
+    expect(result.remotePeer.pubKey).to.exist()
+    expect(result.remotePeer.pubKey.bytes).to.eql(localPeer.pubKey.bytes)
   })
 
   it('performs a spec compliant outbound exchange', async () => {
     const [inboundConnection, outboundConnection] = duplexPair()
-    await Promise.all([
-      Secio.secureOutbound(localPeer, outboundConnection, remotePeer),
+    const cidOnlyPeerId = PeerId.createFromCID(remotePeer.toB58String())
+    const [result] = await Promise.all([
+      Secio.secureOutbound(localPeer, outboundConnection, cidOnlyPeerId),
       (async () => {
         const wrap = Handshake(inboundConnection)
         const state = new State(remotePeer, localPeer)
@@ -176,5 +181,8 @@ describe('secio', () => {
         expect(ourNonce.slice()).to.eql(state.proposal.out.rand)
       })()
     ])
+
+    expect(result.remotePeer.pubKey).to.exist()
+    expect(result.remotePeer.pubKey.bytes).to.eql(remotePeer.pubKey.bytes)
   })
 })

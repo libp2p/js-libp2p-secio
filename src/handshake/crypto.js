@@ -68,6 +68,7 @@ exports.identify = async (state, msg) => {
     if (state.id.remote.toString() !== remoteId.toString()) {
       throw new UnexpectedPeerError('Dialed to the wrong peer: IDs do not match!')
     }
+    state.id.remote.pubKey = state.key.remote
   } else {
     state.id.remote = remoteId
   }
