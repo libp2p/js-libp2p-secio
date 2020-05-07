@@ -1,3 +1,13 @@
+<a name="0.12.5"></a>
+## [0.12.5](https://github.com/ipfs/js-libp2p-secio/compare/v0.12.4...v0.12.5) (2020-05-07)
+
+
+### Bug Fixes
+
+* return public key ([#121](https://github.com/ipfs/js-libp2p-secio/issues/121)) ([70a8a98](https://github.com/ipfs/js-libp2p-secio/commit/70a8a98))
+
+
+
 <a name="0.12.4"></a>
 ## [0.12.4](https://github.com/ipfs/js-libp2p-secio/compare/v0.12.3...v0.12.4) (2020-03-23)
 
