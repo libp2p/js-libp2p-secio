@@ -10,6 +10,10 @@ const lp = require('it-length-prefixed')
 const Wrap = require('it-pb-rpc')
 const { int32BEEncode, int32BEDecode } = lp
 
+// Maximum length of the data section of the message
+// 8MB, https://github.com/libp2p/specs/blob/94ad1bd/secio/README.md#message-framing
+const MAX_DATA_LENGTH = 0x800000
+
 const etm = require('../etm')
 const crypto = require('./crypto')
 
@@ -28,10 +32,12 @@ module.exports = async function finish (state, wrapped) {
     etm.createBoxStream(proto.local.cipher, proto.local.mac),
     lp.encode({ lengthEncoder: int32BEEncode }),
     network, // and gets piped INTO and FROM the network
-    lp.decode({ lengthDecoder: int32BEDecode }),
+    lp.decode({ lengthDecoder: int32BEDecode, maxDataLength: MAX_DATA_LENGTH }),
     etm.createUnboxStream(proto.remote.cipher, proto.remote.mac),
     secure // and gets piped TO the user
-  )
+  ).catch(err => {
+    log.error('an error occurred in the crypto stream', err)
+  })
 
   // Exchange nonces over the encrypted stream for final verification
   const shake = Wrap(user)
