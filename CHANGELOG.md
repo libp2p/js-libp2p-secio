@@ -1,3 +1,13 @@
+<a name="0.12.6"></a>
+## [0.12.6](https://github.com/ipfs/js-libp2p-secio/compare/v0.12.5...v0.12.6) (2020-07-08)
+
+
+### Bug Fixes
+
+* comply with message framing spec ([#123](https://github.com/ipfs/js-libp2p-secio/issues/123)) ([34c4844](https://github.com/ipfs/js-libp2p-secio/commit/34c4844))
+
+
+
 <a name="0.12.5"></a>
 ## [0.12.5](https://github.com/ipfs/js-libp2p-secio/compare/v0.12.4...v0.12.5) (2020-05-07)
 
