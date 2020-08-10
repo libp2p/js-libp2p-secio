@@ -1,9 +1,11 @@
 'use strict'
 
-const { Buffer } = require('buffer')
 const PeerId = require('peer-id')
 const crypto = require('libp2p-crypto')
 const debug = require('debug')
+const uint8ArrayConcat = require('uint8arrays/concat')
+const uint8ArrayEquals = require('uint8arrays/equals')
+const uint8ArrayToString = require('uint8arrays/to-string')
 const log = debug('libp2p:secio')
 log.error = debug('libp2p:secio:error')
 
@@ -36,7 +38,7 @@ exports.createExchange = async (state) => {
   state.shared.generate = res.genSharedKey
 
   // Gather corpus to sign.
-  const selectionOut = Buffer.concat([
+  const selectionOut = uint8ArrayConcat([
     state.proposalEncoded.out,
     state.proposalEncoded.in,
     state.ephemeralKey.local
@@ -61,7 +63,7 @@ exports.identify = async (state, msg) => {
 
   state.key.remote = crypto.keys.unmarshalPublicKey(pubkey)
 
-  const remoteId = await PeerId.createFromPubKey(pubkey.toString('base64'))
+  const remoteId = await PeerId.createFromPubKey(uint8ArrayToString(pubkey, 'base64pad'))
 
   // If we know who we are dialing to, double check
   if (state.id.remote) {
@@ -120,7 +122,7 @@ exports.verify = async (state, msg) => {
   state.exchange.in = pbm.Exchange.decode(msg)
   state.ephemeralKey.remote = state.exchange.in.epubkey
 
-  const selectionIn = Buffer.concat([
+  const selectionIn = uint8ArrayConcat([
     state.proposalEncoded.in,
     state.proposalEncoded.out,
     state.ephemeralKey.remote
@@ -168,9 +170,9 @@ exports.generateKeys = async (state) => {
 exports.verifyNonce = (state, n2) => {
   const n1 = state.proposal.out.rand
 
-  if (n1.equals(n2)) return
+  if (uint8ArrayEquals(n1, n2)) return
 
   throw new Error(
-    `Failed to read our encrypted nonce: ${n1.toString('hex')} != ${n2.toString('hex')}`
+    `Failed to read our encrypted nonce: ${uint8ArrayToString(n1, 'base16')} != ${uint8ArrayToString(n2, 'base16')}`
   )
 }

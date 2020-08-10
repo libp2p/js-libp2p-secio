@@ -2,6 +2,8 @@
 
 const BufferList = require('bl/BufferList')
 const { InvalidCryptoTransmissionError } = require('libp2p-interfaces/src/crypto/errors')
+const uint8ArrayToString = require('uint8arrays/to-string')
+const uint8ArrayEquals = require('uint8arrays/equals')
 
 exports.createBoxStream = (cipher, mac) => {
   return async function * (source) {
@@ -29,8 +31,8 @@ exports.createUnboxStream = (decipher, mac) => {
 
       const expected = await mac.digest(data)
 
-      if (!macd.equals(expected)) {
-        throw new InvalidCryptoTransmissionError(`MAC Invalid: ${macd.toString('hex')} != ${expected.toString('hex')}`)
+      if (!uint8ArrayEquals(macd, expected)) {
+        throw new InvalidCryptoTransmissionError(`MAC Invalid: ${uint8ArrayToString(macd, 'base16')} != ${uint8ArrayToString(expected, 'base16')}`)
       }
 
       const decrypted = await decipher.decrypt(data)

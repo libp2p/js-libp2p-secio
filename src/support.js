@@ -1,8 +1,9 @@
 'use strict'
 
-const { Buffer } = require('buffer')
 const mh = require('multihashing-async')
 const crypto = require('libp2p-crypto')
+const uint8ArrayConcat = require('uint8arrays/concat')
+const uint8ArrayCompare = require('uint8arrays/compare')
 
 const { InvalidCryptoExchangeError } = require('libp2p-interfaces/src/crypto/errors')
 
@@ -69,16 +70,16 @@ function makeCipher (cipherType, iv, key) {
 }
 
 exports.selectBest = async (local, remote) => {
-  const oh1 = await exports.digest(Buffer.concat([
+  const oh1 = await exports.digest(uint8ArrayConcat([
     remote.pubKeyBytes,
     local.nonce
   ]))
-  const oh2 = await exports.digest(Buffer.concat([
+  const oh2 = await exports.digest(uint8ArrayConcat([
     local.pubKeyBytes,
     remote.nonce
   ]))
 
-  const order = Buffer.compare(oh1, oh2)
+  const order = uint8ArrayCompare(oh1, oh2)
 
   if (order === 0) {
     throw new InvalidCryptoExchangeError('you are trying to talk to yourself')

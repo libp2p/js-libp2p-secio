@@ -22,7 +22,7 @@ async function sendData (a, b, opts) {
   pipe(
     function * () {
       while (i--) {
-        yield Buffer.allocUnsafe(opts.size)
+        yield new Uint8Array(opts.size)
       }
     },
     a
