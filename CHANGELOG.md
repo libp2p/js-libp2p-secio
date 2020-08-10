@@ -1,3 +1,21 @@
+<a name="0.13.0"></a>
+# [0.13.0](https://github.com/ipfs/js-libp2p-secio/compare/v0.12.6...v0.13.0) (2020-08-10)
+
+
+### Bug Fixes
+
+* replace node buffers with uint8arrays ([#124](https://github.com/ipfs/js-libp2p-secio/issues/124)) ([c3f1f34](https://github.com/ipfs/js-libp2p-secio/commit/c3f1f34))
+
+
+### BREAKING CHANGES
+
+* - The dependencies this module has have uint8arrays as properties
+  instead of node buffers
+
+* chore: remove buffer api usage from tests
+
+
+
 <a name="0.12.6"></a>
 ## [0.12.6](https://github.com/ipfs/js-libp2p-secio/compare/v0.12.5...v0.12.6) (2020-07-08)
 
