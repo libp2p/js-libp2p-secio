@@ -36,7 +36,7 @@
     "it-pb-rpc": "^0.1.4",
     "it-pipe": "^1.1.0",
     "libp2p-crypto": "^0.18.0",
-    "libp2p-interfaces": "^0.3.2",
+    "libp2p-interfaces": "^0.4.0",
     "multiaddr": "^8.0.0",
     "multihashing-async": "^2.0.1",
     "peer-id": "^0.14.0",
