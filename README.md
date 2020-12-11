@@ -1,3 +1,12 @@
+# ⛔️ DEPRECATED
+
+libp2p-secio is now deprecated in libp2p. You can read more about it in the blogpost [We're removing support for the SECIO security transport](https://blog.ipfs.io/2020-08-07-deprecating-secio/).
+Check [js-libp2p/doc/CONFIGURATION.md](https://github.com/libp2p/js-libp2p/blob/master/doc/CONFIGURATION.md#connection-encryption) for what modules are currently supported.
+
+_This library will not be maintained._
+
+---
+
 # js-libp2p-secio
 
 [![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://protocol.ai)
